@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>geoJSON To Tour XML Generator</title>
+
+    <style>
+        body {
+            font: 14px "Arial", sans-serif;
+        }
+
+        #listing {
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+
+
+    <input type="file" onchange="readFile(this)">
+
+    <div id="listing"></div>
+
+    <script>
+
+        /*
+        
+            Generate XML for tour
+            Drag and drop folders to window
+        
+        */
+        console.log("GEOJSON TO XML GENERATOR");
+
+
+        let txt = '';
+
+        function readFile(input) {
+            let file = input.files[0];
+
+            let reader = new FileReader();
+
+            reader.readAsText(file);
+
+            reader.onload = function () {
+                makeTourXML(JSON.parse(reader.result));
+            };
+
+            reader.onerror = function () {
+                console.log(reader.error);
+            };
+
+        }
+
+        // (function testFetch() {
+        //     fetch("features.geojson")
+        //         .then(function (response) {
+        //             return response.json();
+        //         })
+        //         .then(function (result) {
+
+        //             makeTourXML(result);
+
+        //         });
+        // })();
+
+        function find_distance(p1, p2) {
+
+            // lon, lat
+
+            let lat1 = p1[1];
+            let lat2 = p2[1];
+            let lon1 = p1[0];
+            let lon2 = p2[0];
+
+            const R = 6371e3; // metres
+            const φ1 = lat1 * Math.PI / 180; // φ, λ in radians
+            const φ2 = lat2 * Math.PI / 180;
+            const Δφ = (lat2 - lat1) * Math.PI / 180;
+            const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+            const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+            const d = R * c; // in metres
+
+            return Math.round(d * 100);
+        }
+
+        function find_bearing(p1, p2) {
+
+            let lat1 = p1[1];
+            let lat2 = p2[1];
+            let lon1 = p1[0];
+            let lon2 = p2[0];
+
+            const R = 6371e3; // metres
+            const φ1 = lat1 * Math.PI / 180; // φ, λ in radians
+            const φ2 = lat2 * Math.PI / 180;
+            const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+            const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+            const y = Math.sin(Δλ) * Math.cos(φ2);
+            const θ = Math.atan2(y, x);
+            const brng = (θ * 180 / Math.PI + 360) % 360; // in degrees
+
+            return brng;
+
+        }
+
+        function makeTourXML(result) {
+
+            console.log("DATA", result);
+
+            txt = '<krpano floor_height="160" floor_id="0" layout_map_url="default_map_grid.png" layout_map_scale="1.0">';
+            txt += "\r\n";
+            txt += "\r\n";
+            txt += '<include url="../../app/app.xml" />';
+            txt += "\r\n";
+            txt += "\r\n";
+            txt += '<!-- MINIMAP -->';
+            txt += "\r\n";
+            txt += '<layer name="minimap_container" style="minimap_container_style">';
+            txt += "\r\n";
+            txt += '<layer name="minimap_clipped" style="minimap_clipped_style" url="/default_map_grid.png" scale=".32" />';
+            txt += "\r\n";
+            txt += '<layer name="mini_map_spot" style="mapspot" />';
+            txt += "\r\n";
+            txt += "</layer>";
+            txt += "\r\n";
+            txt += '<layer name="bigmap_container" style="bigmap_container_style">';
+            txt += "\r\n";
+            txt += '<layer name="bigmap" style="bigmap_style" url="default_map.png" />';
+            txt += "\r\n";
+            txt += '<layer name="big_map_spot" style="mapspot" scale=".4" />';
+            txt += "\r\n";
+            txt += "</layer>";
+            txt += "\r\n";
+            txt += "\r\n";
+
+            txt += '<!-- INIT -->';
+            txt += "\r\n";
+            txt += '<action name="local_init" scope="local" autorun="onstart">';
+            txt += "\r\n";
+            txt += 'update_floor("Floor __");';
+            txt += "\r\n";
+            txt += 'offset_radar(0,0,0,0);'
+            txt += "\r\n";
+            txt += '<!-- make_symbolic_link("GS__0001","GS__0002"); -->';
+            txt += "\r\n";
+            txt += '</action>';
+            txt += "\r\n";
+            txt += "\r\n";
+
+            txt += '<!-- SCENES -->';
+
+            let features = result.features;
+            let scenes = [0]
+            features.forEach(o => {
+
+                if (Number(o.properties.id) > 0) {
+                    scenes[Number(o.properties.id)] = {
+                        id: o.properties.id,
+                        name: o.properties.name || null,
+                        parent: o.properties.parent || null,
+                        children: o.properties.children || null,
+                        poi: o.properties.poi || null,
+                        rotation: o.properties.rotation || null,
+                        coords: o.geometry.coordinates,
+                    }
+                }
+
+            })
+
+            txt += "\r\n";
+            txt += "\r\n";
+
+            console.log(scenes);
+
+            for (let i = 1; i < scenes.length; i++) {
+
+                let scene = scenes[i];
+                let name = scene.name || "GS__0" + scene.id;
+
+                txt += '<scene id="' + scene.id + '" name="' + name + '">';
+                // txt += '<scene name="' + name + '">';
+                txt += "\r\n";
+                txt += '<preview url="panos/' + name + '.tiles/preview.jpg" />';
+                txt += "\r\n";
+                txt += '<image prealign="0|' + (scene.rotation || "0") + '|0">';
+                txt += "\r\n";
+                txt += '<cube url="panos/' + name + '.tiles/pano_%s.jpg" />';
+                txt += "\r\n";
+                //txt += '<!-- <depthmap url="../../content/stl/default_stl.stl" style="depthmapsettings" /> -->';
+                //txt += "\r\n";
+                txt += '</image>';
+                txt += "\r\n";
+                if (scene.children) {
+                    let children = String(scene.children).split(",");
+                    for (let c = 0; c < children.length; c++) {
+                        let distance;
+                        let angle;
+                        let tx;
+                        let tz;
+                        let child = scenes[Number(children[c])];
+                        let child_name = child.name || "GS__0" + child.id;
+                        //console.log(scene.id, child.id);
+                        distance = find_distance(scene.coords, child.coords);
+                        angle = find_bearing(scene.coords, child.coords);
+
+                        tz = distance * Math.cos((Math.PI / 180) * angle);
+                        tx = distance * Math.sin((Math.PI / 180) * angle);
+
+                        txt += '<hotspot name="' + child_name  + '" style="floorspot" linkedscene="' + child_name + '" tx="' + tx + '" tz="' + tz + '" />';
+                        txt += "\r\n";
+                    }
+                }
+                if (scene.poi) {
+                    let poi = String(scene.poi).split(",");
+                    for (let j = 0; j < poi.length; j++) {
+                        txt += '<hotspot name="' + poi[j] + '" style="content_icon_style|' + poi[j] + '" ath="0" atv="0" />';
+                        txt += "\r\n";
+                    }
+                }
+                txt += '</scene>';
+                txt += "\r\n\r\n";
+            }
+
+
+            txt += "\r\n";
+            txt += "</krpano>";
+
+            listing.innerText = txt;
+
+        }
+
+
+
+    </script>
+
+</body>
+</head>

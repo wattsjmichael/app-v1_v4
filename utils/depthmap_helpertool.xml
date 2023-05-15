@@ -1,0 +1,420 @@
+<krpano>
+
+	<!--
+		A small helper tool for finding the correct
+		offset and scale settings for a depthmap image.
+
+		1. Click 'Dollhouse View'.
+
+		2. Change the 'Offset' value until walls/floors
+		   that should be straight are really straight.
+
+		3. One box in the checkerboard is 1x1 Meter.
+
+		4. Change the 'Scale' and 'Floor Level' settings
+		   until the correct/target size is reached.
+		   The floor itself and the floor level are only a helper
+		   tools for finding the correct scaling.
+
+		5. Optionally change also the 'Rotation' value, that will rotate
+		   around the Y-axis by using the image.prealign setting.
+	-->
+
+	<!-- layout -->
+
+	<control mouse="follow" touch="drag" zoomtocursor="false" zoomoutcursor="false" draginertia="0.1" dragfriction="0.9" movetoaccelerate=".5" movetospeed="10.0" movetofriction="0.8" keybaccelerate="50" keybfriction="0.1" keybfovchange="0.25" mousefovchange="1.0" fovspeed="3.0" fovfriction="0.9" bouncinglimits="true" touchzoom="true" />
+
+	<layer name="depthmap_helpertool" visible="true" keep="true" type="container" align="lefttop" x="0" width="200" y="180" height="542" bgalpha="0">
+
+		<!-- <layer name="dmht_info" style="dmht_text" align="top" y="8" html="View Tools" /> -->
+		<!-- ondown="dmht_layerdragging(get(layer[depthmap_helpertool]));" -->
+
+		<layer name="dmht_depthoffset" style="dmht_button_center|dmht_value_control" align="top" x="0" y="0" width="180" varstep="0.05" vardragrange="1.0" getvar="copy(var, image.depthmap.offset);" setvar="copy(image.depthmap.offset, var); updatescreen(); roundval(tmp,var,3); txtadd(html,'Offset: ',get(tmp));" />
+
+		<layer name="dmht_depthscale" style="dmht_button_center|dmht_value_control" align="top" x="0" y="22" width="180" varstep="0.1" vardragrange="1.0" getvar="copy(var, image.depthmap.scale); copy(startscale,var); copy(floorlevel, hotspot[dmht_floor].ty);" setvar="if(var == 0.0, set(var,0.001)); copy(image.depthmap.scale, var); updatescreen(); roundval(tmp,var,3); txtadd(html,'Scale: ',get(tmp)); calc(floorscale,var / startscale); Math.abs(floorscale); calc(hotspot[dmht_floor].ty, floorlevel * floorscale); updatescreen(); roundval(tmp,hotspot[dmht_floor].ty,0); txtadd(layer[dmht_floorlevel].html,'Floor Level: ',get(tmp),'cm');" />
+
+		<layer name="dmht_floorlevel" style="dmht_button_center|dmht_value_control" align="top" x="0" y="44" width="180" varstep="5" vardragrange="300" getvar="copy(var, hotspot[dmht_floor].ty);" setvar="copy(hotspot[dmht_floor].ty, var); updatescreen(); roundval(tmp,var,0); txtadd(html,'Floor Offset: ',get(tmp),'cm');" />
+
+		<layer name="dmht_prealign" style="dmht_button_center|dmht_value_control" align="top" x="0" y="66" width="180" varstep="0.1" vardragrange="360" getvar="txtsplit(image.prealign,'|',null,var,null); if(var == null,set(var,0));" setvar="calc(image.prealign,'0|'+var+'|0');  updatescreen(); roundval(tmp,var,1); txtadd(html,'Rotation: ',get(tmp),'°'); copy_rotation(get(tmp));" />
+
+		<layer name="dmht_dollhouseview" style="dmht_button" align="top" x="0" y="88" width="180" html="Dollhouse View" onclick="set(control.invert,true); tween(view.oz,1000); lookto(270,35,80,default,true,true); tween(view.tx,0); tween(view.ty,0); tween(view.tz,0);" />
+
+		<layer name="dmht_resetview" style="dmht_button" align="top" x="0" y="110" width="180" html="Reset View" onclick="set(control.invert,false); tween(view.fisheye|view.tx|view.ty|view.tz|view.ox|view.oy|view.oz, calc('0|'+image.ox+'|'+image.oy+'|'+image.oz+'|0|0|0'));" />
+
+		<layer name="dmht_hidegrid" style="dmht_button" align="top" x="0" y="132" width="180" html="Toggle Grid" onclick="toggle_grid" />
+
+		<layer name="dmht_hidefloorspots" style="dmht_button" align="top" x="0" y="154" width="180" html="Toggle Floorspots" onclick="toggle_floorspots" />
+
+		<layer name="dmht_hidehotspots" style="dmht_button" align="top" x="0" y="176" width="180" html="Toggle Hotspots" onclick="toggle_hotspots" />
+
+		<layer name="dmht_hideview" style="dmht_button" align="top" x="0" y="198" width="180" html="Toggle View" onclick="toggle_view()" />
+
+		<layer name="dmht_showallspots" style="dmht_button" align="top" x="0" y="220" width="180" html="Show All Floorspots" onclick="show_all_floorspots" />
+
+		<layer name="dmht_showlocalspots" style="dmht_button" align="top" x="0" y="242" width="180" html="Show Local Floorspots" onclick="show_local_floorspots" />
+
+		<!-- <layer name="dmht_show_map" style="dmht_button" align="top" x="0" y="392" width="180" html="Show Map" onclick="toggle_map" /> -->
+
+		<layer name="dmht_scale_map" style="dmht_button_center|dmht_value_control" align="top" x="0" y="264" width="180" varstep=".05" vardragrange="10.0" html="Map Scale" onclick="toggle_map();" getvar="copy(var, hotspot[map_grid].scale);" setvar="copy(hotspot[map_grid].scale, var); copy_layout_map_scale(get(tmp)); updatescreen(); roundval(tmp,var,2); txtadd(html,'Map Scale: ',get(tmp));" />
+
+		<layer name="dmht_home_directory" style="dmht_button" align="top" x="0" y="286" width="180" html="Root Directory" onclick="goto_home_dir" />
+		<layer name="dmht_client_directory" style="dmht_button" align="top" x="0" y="306" width="180" html="Client Directory" onclick="goto_client_dir" />
+		<layer name="dmht_next_pano" style="dmht_button" align="top" x="0" y="328" width="180" html="Next Scene" onclick="skin_nextscene_loop(+1);" />
+		<layer name="dmht_prev_pano" style="dmht_button" align="top" x="0" y="350" width="180" html="Previous Scene" onclick="skin_nextscene_loop(-1);" />
+		<layer name="dmht_list_hotspots" style="dmht_button" align="top" x="0" y="372" width="180" html="List Hotspots" onclick="list_hotspots();" />
+
+		<!-- getvar="txtsplit(image.prealign,'|',null,var,null); if(var == null,set(var,0));" setvar="calc(image.prealign,'0|'+var+'|0');  updatescreen(); roundval(tmp,var,1); txtadd(html,'Rotation: ',get(tmp),'°');"
+ -->
+
+	</layer>
+
+	<!-- LAYOUT MAP scale="2.3" -->
+	<!-- <hotspot name="map_grid" style="dmht_map" width="2000" height="2000" /> -->
+	<!-- <style name="dmht_map" keep="true" enabled="false" alpha=".5" distorted="true" depth="1" scale="1" url="../minimap/default_map_grid.png" rotationorder="xyz" rx="-90" torigin="world" tx="0" ty="160" tz="0" depthbuffer="true" visible="false" onloaded.addevent="move_map();" /> -->
+
+
+	<!-- 1889245  -->
+
+	<!-- the floor level hotspot -->
+
+	<hotspot name="dmht_floor" keep="true" enabled="false" url="depthmap_helpertool_checkerboard.png" alpha="0.7" width="1000" height="1000" scale="0.5" distorted="true" depth="0" rotationorder="xyz" rx="-90" torigin="world" tx="0" ty="160" tz="0" depthbuffer="true" visible="false" />
+
+	<!-- hide nadir spot -->
+	<style name="nadir_spot" url="nadir_compass_dev.png" />
+	<!-- floor map ry angle is 90 for older projects (newer projects is 0) -->
+	<!-- <style name="dmht_map" keep="true" enabled="false" alpha=".5" distorted="true" depth="1" scale="1" url="../minimap/default_map_grid.png" rotationorder="xyz" rx="-90" torigin="world" tx="0" ty="160" tz="0" depthbuffer="true" visible="false" onloaded.addevent="move_map();" /> -->
+
+	<!-- ry="90" -->
+	<!-- styles / actions -->
+
+	<style name="dmht_text" type="text" css="color:red;" bg="false" />
+
+	<style name="dmht_button_center" type="text" css="text-align:center;" padding="4 8" bgborder="1 0x000000 0.12" bgroundedge="1" bgcolor="0xFFFFFF" ondown.addevent="set(bgcolor,0xDDDDDD);" onup.addevent="set(bgcolor,0xFFFFFF);" onover.addevent="if(!pressed,set(bgcolor,0xEEEEEE));" onout.addevent="if(!pressed,set(bgcolor,0xFFFFFF));" />
+
+	<style name="dmht_button" type="text" padding="4 8" bgborder="1 0x000000 0.12" bgroundedge="1" bgcolor="0xFFFFFF" ondown.addevent="set(bgcolor,0xDDDDDD);" onup.addevent="set(bgcolor,0xFFFFFF);" onover.addevent="if(!pressed,set(bgcolor,0xEEEEEE));" onout.addevent="if(!pressed,set(bgcolor,0xFFFFFF));" />
+
+	<style name="dmht_value_control" ondown.addevent="dmht_value_control_ondown();" onloaded.addevent="getvar(); setvar(); dmht_value_control_add_incdec_buttons();" />
+
+	<action name="list_hotspots">
+		for(set(i,0), i LT hotspot.count, inc(i),
+			trace(get(hotspot[get(i)].name));
+		);
+	</action>
+
+	<action autorun="onstart" type="javascript"><![CDATA[
+			if (localStorage.getItem("layout_map") == 1) {
+				krpano.call("init_dev_map()");
+			}
+		]]>	</action>
+
+	<action autorun="onstart">
+		if (global.legacy != null,
+			set(hotspot[map_grid].ry,90);
+		)
+		trace("Version 1.0");
+	</action>
+
+	<action name="set_map_toggle" type="javascript"><![CDATA[
+			localStorage.setItem("layout_map", args[1]);
+		]]>	</action>
+
+	<action name="copy_layout_map_scale" type="Javascript"><![CDATA[
+
+    	let x = 'layout_map_scale="' + args[1] + '"';
+
+		//copy text to clipboard
+		let node = document.createElement("input");
+		let att = document.createAttribute("id");
+		att.value = "temp_xml"; 
+		let att2 = document.createAttribute("value");
+		att2.value = x; 
+		node.setAttributeNode(att); 
+		node.setAttributeNode(att2);
+		let copyText = document.getElementsByTagName("body")[0].appendChild(node);
+		copyText.select();
+		copyText.setSelectionRange(0, 99999); /*For mobile devices*/
+		document.execCommand("copy");
+		node.parentNode.removeChild(node); 
+		//console.log(x);
+
+	]]>	</action>
+
+	<action name="copy_rotation" type="Javascript"><![CDATA[
+
+    	let x = '<image prealign="0|' + args[1] + '|0">';
+
+		//copy text to clipboard
+		let node = document.createElement("input");
+		let att = document.createAttribute("id");
+		att.value = "temp_xml"; 
+		let att2 = document.createAttribute("value");
+		att2.value = x; 
+		node.setAttributeNode(att); 
+		node.setAttributeNode(att2);
+		let copyText = document.getElementsByTagName("body")[0].appendChild(node);
+		copyText.select();
+		copyText.setSelectionRange(0, 99999); /*For mobile devices*/
+		document.execCommand("copy");
+		node.parentNode.removeChild(node); 
+
+	]]>	</action>
+
+	<events onviewchanged="move_map" />
+
+	<!-- <action name="scale_map" scope="local" args="scal">
+trace(get(scal));
+set(hotspot[map_grid].scale, get(scal));
+updatescreen();
+</action> -->
+	<action name="rotate_pano" scope="local" args="rot">
+			calc(image.prealign,'0|'+get(rot)+'|0');
+			updatescreen();
+	</action>
+	<action name="move_map" scope="local">
+		calc(new_x, calc(get(current_x)*-1));
+		calc(new_y, calc(get(current_z)*-1));
+		set(hotspot[map_grid].tx, get(new_x));
+		set(hotspot[map_grid].tz, get(new_y));
+						<!-- init_map(); -->
+		<!-- tween(hotspot[map_grid].tx, get(new_x), 0, "easeinexpo");
+		tween(hotspot[map_grid].tz, get(new_y), 0, "easeinexpo");  -->
+	</action>
+
+	<action name="init_dev_map" scope="local">
+		<!-- show_all_floorspots();	 -->
+		set(hotspot[map_grid].visible, true);
+		<!-- set(hotspot[map_grid].url, "/maps/floor_93_grid.png"); -->
+		if(layout_map_scale
+		,
+		set(hotspot[map_grid].scale, get(layout_map_scale));
+		);
+	</action>
+
+	<action name="goto_home_dir" type="Javascript"><![CDATA[
+		window.open("../../", "_self");
+	]]>	</action>
+
+	<action name="goto_client_dir" type="Javascript"><![CDATA[
+		window.open("../", "_self");
+	]]>	</action>
+
+	<action name="skin_nextscene_loop" scope="local" args="indexadd">
+		add(newsceneindex, scene[get(xml.scene)].index, indexadd);
+		sub(lastsceneindex, scene.count, 1);
+		if(newsceneindex LT 0, copy(newsceneindex,lastsceneindex));
+		if(newsceneindex GT lastsceneindex, set(newsceneindex,0));
+						<!-- loadscene(get(scene[get(newsceneindex)].name), null, MERGE|KEEPVIEW); -->
+		next_scene(get(scene[get(newsceneindex)].name));
+	</action>
+
+
+
+	<action name="toggle_map">
+
+
+		if (get(hotspot[map_grid].visible) == true
+			,
+			set(hotspot[map_grid].visible, false);
+			set_map_toggle(0);
+							<!-- show_local_floorspots(); -->
+			,
+							<!-- loadscene(0, null, MERGE|KEEP); -->
+			init_dev_map();
+			set_map_toggle(1);
+
+							<!-- for(set(i,0), i LT hotspot.count, inc(i),
+
+				if (hotspot[get(i)].style == 'floorspot_trans_style'
+				,
+				set(hotspot[get(i)].visible, false);
+				,
+				);
+			
+				if (hotspot[get(i)].style == 'floorspot'
+				,
+				set(hotspot[get(i)].visible, true);
+				,
+				);
+			
+			); -->
+
+
+		);
+
+		updatescreen();
+	
+
+	</action>
+
+	<!-- an action for toggling grid on and off -->
+	<action name="toggle_grid">
+		if (get(hotspot[dmht_floor].visible) == true, set(hotspot[dmht_floor].visible, false); , set(hotspot[dmht_floor].visible, true); );
+		updatescreen();
+	</action>
+
+	<action name="birdseye">
+set(control.invert,true); tween(view.oz,1000); lookto(270,35,80,default,true,true); tween(view.tx,0); tween(view.ty,0); tween(view.tz,0);
+	</action>
+
+	<action name="first_person">
+	set(control.invert,false); tween(view.fisheye|view.tx|view.ty|view.tz|view.ox|view.oy|view.oz, calc('0|'+image.ox+'|'+image.oy+'|'+image.oz+'|0|0|0'));
+	</action>
+
+	<action name="toggle_view">
+		if (get(image.oy) == 0 , set(image.oy,-3000); , set(image.oy,0); );
+		updatescreen();
+	</action>
+
+	<action name="show_all_floorspots">
+			set(cs, get(scene[get(scene_name)]));
+		get_path(get(scene[get(xml.scene)].name),get(cs.floor_id)));
+		updatescreen();
+	</action>
+
+
+	<action name="show_local_floorspots">
+		for(set(i,0), i LT hotspot.count, inc(i),
+			if(get(hotspot[get(i)].style) == 'floorspot'
+			,
+				set(hotspot[get(i)].visible, false);
+				set(hotspot[get(i)].enabled, false);
+			);
+		);
+			set(sc,get(plugin[scene]));
+	sc.get_path_local();
+		<!-- get_path_local(get(scene[get(xml.scene)].name)); -->
+		updatescreen();
+	</action>
+
+
+
+
+	<!-- an action for toggling view on and off -->
+	<action name="toggle_floorspots">
+
+
+			for(set(i,0), i LT hotspot.count, inc(i),
+				if( get(hotspot[get(i)].style) == 'floorspot' , 
+
+					if ( get(hotspot[get(i)].visible) == true , 
+						set(hotspot[get(i)].visible, false);
+						,
+						set(hotspot[get(i)].visible, true);
+					);
+					,
+				);
+			)
+	</action>
+
+	<action name="toggle_hotspots">
+
+
+			for(set(i,0), i LT hotspot.count, inc(i),
+				if( get(hotspot[get(i)].style) != 'floorspot' , 
+
+				if( get(hotspot[get(i)].name) != 'dmht_floor' ,	
+					if ( get(hotspot[get(i)].visible) == true , 
+						set(hotspot[get(i)].visible, false);
+						,
+						set(hotspot[get(i)].visible, true);
+					);
+				);
+
+					,
+				);
+			)
+	</action>
+
+	<!-- an action for dragging the helper tool layer -->
+	<!-- <action name="dmht_layerdragging" scope="localonly" args="layertodrag">
+		copy(backup_align, layertodrag.align);
+		copy(backup_edge, layertodrag.backup_edge);
+		layertodrag.changeorigin(lefttop,lefttop);
+		set(layertodrag.align,lefttop);
+		set(layertodrag.edge,lefttop);
+		layertodrag.updatepos();
+		copy(start_lx, layertodrag.pixelx);
+		copy(start_ly, layertodrag.pixely);
+		copy(start_mx, global.mouse.x);
+		copy(start_my, global.mouse.y);
+		asyncloop(caller.pressed,
+			calc(layertodrag.x, start_lx + global.mouse.x - start_mx);
+			calc(layertodrag.y, start_ly + global.mouse.y - start_my);
+			clamp(layertodrag.x, 1, calc(global.stagewidth - layertodrag.pixelwidth - 1));
+			clamp(layertodrag.y, 1, calc(global.stageheight - layertodrag.pixelheight - 1));
+		  ,
+			layertodrag.changeorigin(get(backup_align),get(backup_edge));
+		);
+	</action> -->
+
+
+	<!-- an action for add increase/decrease buttons on the value control -->
+	<action name="dmht_value_control_add_incdec_buttons">
+		calc(name_inc, name + '_inc');
+		calc(name_dec, name + '_dec');
+		addlayer(get(name_inc));
+		addlayer(get(name_dec));
+		copy(layer_inc, layer[get(name_inc)]);
+		copy(layer_dec, layer[get(name_dec)]);
+		layer_inc.loadstyle(dmht_button);
+		layer_dec.loadstyle(dmht_button);
+		copy(layer_inc.parent, name);
+		copy(layer_dec.parent, name);
+		set(layer_inc.align, right);
+		set(layer_dec.align, left);
+		set(layer_inc.html, '+');
+		set(layer_dec.html, '-');
+		set(layer_inc.ondown, set(stepdir,+1); dmht_value_control_incdec_ondown(); );
+		set(layer_dec.ondown, set(stepdir,-1); dmht_value_control_incdec_ondown(); );
+	</action>
+
+
+	<!-- an action for increasing or decreasing the button values -->
+	<action name="dmht_value_control_incdec_ondown">
+		copy(t1,timertick);
+		asyncloop(pressed,
+			calc(dt,timertick - t1);
+			if(dt GT 500,
+				callwith(calc('layer['+parent+']'),
+					calc(dt,timertick - t1);
+					calc(stepscale, dt GT 2000 ? (dt / 1000) : 1.0);
+					getvar();
+					calc(var, var + stepdir * stepscale * varstep / display.currentfps);
+					setvar();
+				);
+			);
+		  ,
+			calc(dt,timertick - t1);
+			if(dt LT 500,
+				callwith(calc('layer['+parent+']'),
+					getvar();
+					calc(var, (var + stepdir * varstep) / varstep);
+					Math.round(var);
+					calc(var, var * varstep);
+					setvar();
+				);
+			);
+		);
+	</action>
+
+
+	<!-- an action for changing the button value by dragging/moving the mouse around -->
+	<action name="dmht_value_control_ondown">
+		copy(startx, mouse.stagex);
+		copy(starty, mouse.stagey);
+		getvar();
+		copy(startv, var);
+		asyncloop(pressed,
+			calc(dx, (mouse.stagex - startx) / stagewidth );
+			calc(dy, (mouse.stagey - starty) / stageheight );
+			if(dx*dx GT dy*dy,
+				calc(var,startv + dx * vardragrange);
+			  ,
+				calc(var,startv + dy * vardragrange);
+			);
+			setvar();
+		  );
+	</action>
+
+
+</krpano>

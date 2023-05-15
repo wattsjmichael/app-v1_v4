@@ -1,0 +1,878 @@
+<krpano>
+
+
+	<!--
+		A small helper tool for finding the correct
+		offset and scale settings for a depthmap image.
+
+		1. Click 'Dollhouse View'.
+
+		2. Change the 'Offset' value until walls/floors
+		   that should be straight are really straight.
+
+		3. One box in the checkerboard is 1x1 Meter.
+
+		4. Change the 'Scale' and 'Floor Level' settings
+		   until the correct/target size is reached.
+		   The floor itself and the floor level are only a helper
+		   tools for finding the correct scaling.
+
+		5. Optionally change also the 'Rotation' value, that will rotate
+		   around the Y-axis by using the image.prealign setting.
+	-->
+
+		<action name="skin_deeplinking_update_url_process" scope="local">
+		copy(adr, browser.location);
+		indexoftxt(qi, get(adr), '?');
+		if(qi GT 0, subtxt(adr, adr, 0, get(qi)));
+		copy(si, scene[get(xml.scene)].index);
+		copy(h, view.hlookat);
+		copy(v, view.vlookat);
+		copy(f, view.fov);
+		copy(d, view.distortion);
+		copy(a, view.architectural);
+		<!-- copy(y, tour_mode); -->
+		copy(id, scene[get(xml.scene)].name);
+		clamp(d, 0.0, 1.0);
+		clamp(a, 0.0, 1.0);
+		set(pp, calc(f LT 10 ? 6 : 2));
+		roundval(h, get(pp));
+		roundval(v, get(pp));
+		<!-- roundval(f, get(pp)); -->
+		roundval(d, 2);
+		roundval(a, 1);
+		set(adr, calc(adr + '?startscene=' + si + '&amp;startactions=lookat('+h+','+v+','+f+','+d+','+a+');&amp;scene_id=' + id));
+		js( history.replaceState(null, document.title, get(adr)); );
+	</action>
+
+
+	<!-- layout -->
+
+	<layer name="hotspot_helpertool" visible="true" keep="true" type="container"
+	       align="righttop" x="10" y="180" width="200" height="512"
+	       bgalpha="0"
+	       >
+
+		<!-- <layer name="hsht_info" style="hsht_text" align="top" y="8"
+		       html="XML Tools"
+		       /> -->
+		       <!-- ondown="hsht_layerdragging(get(layer[hotspot_helpertool]));" -->
+
+		<layer name="hsht_add_fire_ext" style="hsht_button" align="top" x="0" y="0" width="180"
+		       html="Add Fire Extinguisher"
+		       onclick="add_fire_ext();"
+		       />
+
+		<layer name="hsht_add_defib" style="hsht_button" align="top" x="0" y="23" width="180"
+		       html="Add Defibrullator"
+		       onclick="add_defib();"
+		       />
+		
+		<layer name="hsht_add_el_em_phone" style="hsht_button" align="top" x="0" y="46" width="180"
+		       html="Add Elevator Phone"
+		       onclick="add_el_em_phone();"
+		       />
+
+		<layer name="hsht_add_poi_spot" style="hsht_button" align="top" x="0" y="69" width="180"
+		       html="Add POI Spot"
+		       onclick="add_poi_spot();"
+		       />
+
+		<layer name="hsht_sprinkler" style="hsht_button" align="top" x="0" y="92" width="180"
+		       html="Add Sprinkler"
+		       onclick="add_sprinkler();"
+		       />
+
+		<layer name="hsht_warden_phone" style="hsht_button" align="top" x="0" y="115" width="180"
+		       html="Add Warden Phone"
+		       onclick="add_warden_phone();"
+		       />
+		<layer name="hsht_door_release" style="hsht_button" align="top" x="0" y="138" width="180"
+		       html="Add Door Release"
+		       onclick="add_door_release();"
+		       />
+
+		<layer name="hsht_add_firstaid" style="hsht_button" align="top" x="0" y="161" width="180"
+		       html="Add First Aid Kit"
+		       onclick="add_firstaid();"
+		       />
+
+		<layer name="hsht_add_stair" style="hsht_button" align="top" x="0" y="184" width="180"
+		       html="Add Stair"
+		       onclick="add_stair();"
+		       />
+		<layer name="hsht_pull_station" style="hsht_button" align="top" x="0" y="207" width="180"
+		       html="Add Pull Station"
+		       onclick="add_pull_st();"
+		       />
+
+		<layer name="hsht_edit_floorspots" style="hsht_button" align="top" x="0" y="230" width="180"
+		       html="Edit Floorspots"
+		       onclick="edit_floorspots();"
+		       />
+
+		<layer name="hsht_edit_hotspots" style="hsht_button" align="top" x="0" y="253" width="180"
+		       html="Edit Hotspots"
+		       onclick="edit_hotspots();"
+		       />
+		<layer name="hsht_make_stair_node" style="hsht_button" align="topleft" x="10" y="276" width="30"
+		       html="1"
+		       onclick="make_stair_node('STAIR_1', get(view.hlookat));"
+		       />
+		<layer name="hsht_make_stair_node_2" style="hsht_button" align="toplleft" x="40" y="276" width="30"
+		       html="2"
+		       onclick="make_stair_node('STAIR_2', get(view.hlookat));"
+		       />
+		<layer name="hsht_make_stair_node_3" style="hsht_button" align="topleft" x="70" y="276" width="30"
+		       html="3"
+		       onclick="make_stair_node('STAIR_3', get(view.hlookat));"
+		       />
+		<layer name="hsht_make_stair_node_4" style="hsht_button" align="topleft" x="100" y="276" width="30"
+		       html="4"
+		       onclick="make_stair_node('STAIR_4', get(view.hlookat));"
+		       />
+		<layer name="hsht_make_stair_node_5" style="hsht_button" align="topleft" x="130" y="276" width="30"
+		       html="5"
+		       onclick="make_stair_node('STAIR_5', get(view.hlookat));"
+		       />
+		<layer name="hsht_make_stair_node_6" style="hsht_button" align="topleft" x="160" y="276" width="30"
+		       html="6"
+		       onclick="make_stair_node('STAIR_6', get(view.hlookat));"
+		       />
+		<layer name="hsht_make_stair_node_a" style="hsht_button" align="topleft" x="10" y="299" width="30"
+		       html="W"
+		       onclick="make_stair_node('STAIR_W', get(view.hlookat));"
+		       />
+		<layer name="hsht_make_stair_node_2_a" style="hsht_button" align="toplleft" x="40" y="299" width="30"
+		       html="X"
+		       onclick="make_stair_node('STAIR_X', get(view.hlookat));"
+		       />
+		<layer name="hsht_make_stair_node_3_a" style="hsht_button" align="topleft" x="70" y="299" width="30"
+		       html="C"
+		       onclick="make_stair_node('STAIR_C', get(view.hlookat));"
+		       />
+		<layer name="hsht_make_stair_node_4_a" style="hsht_button" align="topleft" x="100" y="299" width="30"
+		       html="D"
+		       onclick="make_stair_node('STAIR_D', get(view.hlookat));"
+		       />
+		<layer name="hsht_make_stair_node_5_a" style="hsht_button" align="topleft" x="130" y="299" width="30"
+		       html="E"
+		       onclick="make_stair_node('STAIR_E', get(view.hlookat));"
+		       />
+		<layer name="hsht_make_stair_node_6_a" style="hsht_button" align="topleft" x="160" y="299" width="30"
+		       html="F"
+		       onclick="make_stair_node('STAIR_F', get(view.hlookat));"
+		       />
+		<layer name="hsht_make_dev_links" style="hsht_button" align="top" x="0" y="322" width="180"
+		       html="Generate Links"
+		       onclick="make_dev_links(get(data[menu_data]));"
+		       />
+		<layer name="hsht_skip_poi" style="hsht_button" align="top" x="0" y="345" width="180"
+		       html="Skip POI"
+		       onclick="skip_poi();"
+		       />
+			
+
+	</layer>
+
+
+	<!-- styles / actions -->
+
+
+	<style name="hsht_text"
+	       type="text"
+	       css="color:red;text-align:left;"
+	       bg="false"
+	       />
+
+	<style name="hsht_button"
+	       type="text"
+	       padding="4 8"
+	       bgborder="1 0x000000 0.12"
+	       bgroundedge="1"
+	       bgcolor="0xFFFFFF"
+	       ondown.addevent="set(bgcolor,0xDDDDDD);"
+	       onup.addevent="set(bgcolor,0xFFFFFF);"
+	       onover.addevent="if(!pressed,set(bgcolor,0xEEEEEE));"
+	       onout.addevent="if(!pressed,set(bgcolor,0xFFFFFF));"
+	       />
+
+	<style name="hsht_value_control"
+	       ondown.addevent="hsht_value_control_ondown();"
+	       onloaded.addevent="getvar(); setvar(); hsht_value_control_add_incdec_buttons();"
+	       />
+
+	<action name="end_draghotspot" scope="local">
+
+		log_hotspot_xml(get(caller.name),get(caller.style),calc(roundval(get(caller.ath), 0)),calc(roundval(get(caller.atv), 0)),get(caller.onclick));
+
+	</action>
+<!-- 
+level_four_catalog
+start_tour,chooser,start_vid_catalog,jackson_greeter,food_court_catalog,level_four_catalog,
+5
+
+ -->
+	<action name="jump" type="Javascript"><![CDATA[
+
+		let item = args[1];
+		let tour_history;
+		sessionStorage.setItem("current_query", item);
+		sessionStorage.setItem("search_item", item);
+		tour_history = sessionStorage.getItem("tour_history").split(",");
+		let i = tour_history.indexOf(item);
+
+		if (i >= 0) {
+			sessionStorage.setItem("tour_index", i);
+		} else {
+			sessionStorage.setItem("tour_history", tour_history[0] + "," + item + ",");
+			sessionStorage.setItem("tour_index", 1);
+		}
+		window.location.reload();
+
+	]]></action>
+
+	<action name="make_stair_node" type="Javascript"><![CDATA[
+		
+		let name = args[1];
+    	let x = '<scene name="' + name + '" stair="true" door="true" ath="' + Math.round(args[2]) + '">\r\n<preview url="panos/' + name + '.tiles/preview.jpg" />\r\n<image prealign="0|0|0">\r\n<cube url="panos/' + name + '.tiles/pano_%s.jpg" />\r\n</image>\r\n</scene>';
+    	//let x = '\t<scene name="' + name + '" stair="true" door="true" ath="' + Math.round(args[2]) + '">\n\n\t\t<preview url="panos/' + name + '.tiles/preview.jpg" />\n\n\t\t<image prealign="0|0|0">\n\t\t\t<cube url="panos/' + name + '.tiles/pano_%s.jpg" />\n\t\t</image>\n\n\t\t<!-- end of path -->\n\n\t</scene>';
+		
+		console.log('Scene XML (copied to clipboard):');
+		console.log(x);
+
+		//copy text to clipboard
+		let node = document.createElement("input");
+		let att = document.createAttribute("id");
+		att.value = "temp_xml"; 
+		let att2 = document.createAttribute("value");
+		att2.value = x; 
+		node.setAttributeNode(att); 
+		node.setAttributeNode(att2);
+		let copyText = document.getElementsByTagName("body")[0].appendChild(node);
+		copyText.select();
+		copyText.setSelectionRange(0, 99999); /*For mobile devices*/
+		document.execCommand("copy");
+		node.parentNode.removeChild(node); 
+
+	]]></action>
+
+	<action name="make_map_node" type="Javascript"><![CDATA[
+		
+    	let x = '<hotspot name="map_grid" style="dmht_map" url="_____.png" scale="1" />';
+		
+		console.log('Map XML (copied to clipboard):');
+		console.log(x);
+
+		//copy text to clipboard
+		let node = document.createElement("input");
+		let att = document.createAttribute("id");
+		att.value = "temp_xml"; 
+		let att2 = document.createAttribute("value");
+		att2.value = x; 
+		node.setAttributeNode(att); 
+		node.setAttributeNode(att2);
+		let copyText = document.getElementsByTagName("body")[0].appendChild(node);
+		copyText.select();
+		copyText.setSelectionRange(0, 99999); /*For mobile devices*/
+		document.execCommand("copy");
+		node.parentNode.removeChild(node); 
+
+	]]></action>
+
+
+	<action name="draghotspot" scppe="local">
+		if(dragging, 
+			screentosphere(mouse.x,mouse.y,ath,atv);
+			delayedcall(0,draghotspot());
+		);
+	</action>
+
+	<action name="dragspot" scope="local">
+		copy(start_mx, mouse.x);
+		copy(start_my, mouse.y);
+		copy(start_tx, caller.tx);
+		copy(start_tz, caller.tz);
+		asyncloop(caller.pressed,
+			calc(dx, (mouse.x - start_mx) * 1);
+			calc(caller.tx, start_tx + view.dir.z * dx);
+			calc(dy, (mouse.y - start_my) * 1);
+			calc(caller.tz, start_tz - view.dir.y * dy);
+			<!-- callwith(caller, showspotinfos(); ); -->
+		);
+	</action>
+
+	<action name="log_floorspot_xml" type="Javascript"><![CDATA[
+
+		let num_to_inc = Number(args[4]);
+		let name;
+		if (num_to_inc > 0) {
+			let temp_name = args[1];
+			let a = temp_name.split("__");
+			let num = Number(a[1]) + num_to_inc;
+			let newNum = (num < 1000) ? "0" + num : num;
+			name = a[0].toUpperCase() + "__" + newNum;
+		} else {
+			name = args[1].toUpperCase();
+		}
+
+		let tx = args[2];
+		let tz = args[3];
+
+		let x = '<hotspot name="' + name + '" style="floorspot" linkedscene="' + name + '" tx="' + tx + '" tz="' + tz + '" />';
+
+		console.log('Floorspot XML (copied to clipboard):');
+		console.log(x);
+
+		//copy text to clipboard
+		let node = document.createElement("input");
+		let att = document.createAttribute("id");
+		att.value = "temp_xml"; 
+		let att2 = document.createAttribute("value");
+		att2.value = x; 
+		node.setAttributeNode(att); 
+		node.setAttributeNode(att2);
+		let copyText = document.getElementsByTagName("body")[0].appendChild(node);
+		copyText.select();
+		copyText.setSelectionRange(0, 99999); /*For mobile devices*/
+		document.execCommand("copy");
+		node.parentNode.removeChild(node); 
+
+
+	]]></action>
+
+	<action name="log_hotspot_xml" type="Javascript"><![CDATA[
+
+		let name = args[1].toUpperCase();
+		let style = args[2];
+		let ath = args[3];
+		let atv = args[4];
+		let onclick = args[5];
+		//let linkedscene = args[5];
+		//let url = args[6];
+		
+		let xmlDoc = (new DOMParser()).parseFromString('<xml><hotspot></hotspot></xml>', "text/xml");
+		let hotspot = xmlDoc.getElementsByTagName('hotspot')[0];
+		
+		if (name)
+		hotspot.setAttribute("name", name.toLowerCase());
+		if (style)
+		hotspot.setAttribute("style", style); 
+		if (atv)
+		hotspot.setAttribute("atv", atv); 
+		if (ath)
+		hotspot.setAttribute("ath", ath); 
+		//if (linkedscene)
+		//hotspot.setAttribute("linkedscene", linkedscene);
+		//if (url) 
+		//hotspot.setAttribute("url", url);
+		//if (onclick != null)
+		//hotspot.setAttribute("onclick", onclick);
+
+		let x = new XMLSerializer().serializeToString(hotspot);
+		console.log('Hotspot XML:');
+		console.log(x);
+
+		//copy text to clipboard
+		let node = document.createElement("input");
+		let att = document.createAttribute("id");
+		att.value = "temp_xml"; 
+		let att2 = document.createAttribute("value");
+		att2.value = x; 
+		node.setAttributeNode(att); 
+		node.setAttributeNode(att2);
+		let copyText = document.getElementsByTagName("body")[0].appendChild(node);
+		copyText.select();
+		copyText.setSelectionRange(0, 99999); /*For mobile devices*/
+		document.execCommand("copy");
+		node.parentNode.removeChild(node);
+		
+	
+	]]></action>
+
+	<action name="showspotinfos" scope="local">
+
+		roundval(x, caller.tx, 0);
+		roundval(z, caller.tz, 0);
+		log_floorspot_xml(get(scene[get(xml.scene)].name),get(x),get(z), 1);
+		<!-- log_floorspot_xml(get(caller.name),get(x),get(z)); -->
+
+	</action>
+
+	<action name="showspotinfos_no_inc" scope="local">
+
+		roundval(x, caller.tx, 0);
+		roundval(z, caller.tz, 0);
+		log_floorspot_xml(get(caller.name),get(x),get(z),0);
+		<!-- log_floorspot_xml(get(caller.name),get(x),get(z)); -->
+
+	</action>
+
+
+	<action name="edit_floorspots" scope="local">
+
+		for(set(i,0), i LT hotspot.count, inc(i),
+			if(get(hotspot[get(i)].style) == 'floorspot'
+			,
+
+				set(hotspot[get(i)].ondown, dragspot());
+				set(hotspot[get(i)].capture, true);
+				set(hotspot[get(i)].onclick, showspotinfos_no_inc());
+			);
+
+			if(get(hotspot[get(i)].style) == 'floorspot_trans_style'
+			,
+				set(hotspot[get(i)].visible, false);
+				set(hotspot[get(i)].enabled, false);
+			);
+		);
+
+	</action>
+
+
+	
+	<action name="edit_hotspots" scope="local">
+
+		for(set(i,0), i LT hotspot.count, inc(i),
+			set(hotspot[get(i)].enabled, true);
+			if(get(hotspot[get(i)].style) != 'floorspot'
+			,
+				set(hotspot[get(i)].ondown, 'set(dragging,true); draghotspot();');
+				set(hotspot[get(i)].onup, set(dragging,false); end_draghotspot(); );
+				set(hotspot[get(i)].capture, true);
+			);
+		);
+
+			if (get(hotspot[map_grid].visible) == true
+			,
+			set(hotspot[map_grid].visible, false);
+			set_map_toggle(0);
+
+		);
+
+		updatescreen();
+
+	</action>
+
+	<action name="create_floorspot" scope="local">
+		addhotspot(temp_floorspot, fs);
+		fs.loadstyle(floorspot);
+        <!-- trace(get(scene[get(xml.scene)].name); -->
+		set(fs,
+			zorder=1000,
+			tz=75,
+			alpha=.5,
+			visible=true,
+			ondown='dragspot();',
+			onclick='showspotinfos();'
+			);
+	</action>
+
+	<action name="add_fire_ext" scope="local">
+
+		addhotspot(fire_ext, tb);
+		tb.loadstyle(poi|fire_ext);
+		set(tb,
+			ath=get(view.hlookat),
+			zorder=100,
+			alpha=.5,
+			name='fire_ext',
+			visible=true,
+			capture=true,
+			ondown='set(dragging,true); draghotspot();',
+            onup='set(dragging,false); end_draghotspot();'
+			);
+
+	</action>
+	<action name="add_interior_stair" scope="local">
+
+		addhotspot(fire_ext, tb);
+		tb.loadstyle(poi|fire_ext);
+		set(tb,
+			ath=get(view.hlookat),
+			zorder=100,
+			alpha=.5,
+			name='fire_ext',
+			visible=true,
+			capture=true,
+			ondown='set(dragging,true); draghotspot();',
+            onup='set(dragging,false); end_draghotspot();'
+			);
+
+	</action>
+	<action name="add_pull_st" scope="local">
+
+		addhotspot(pull_station, tb);
+		tb.loadstyle(poi|pull_station);
+		set(tb,
+			ath=get(view.hlookat),
+			zorder=100,
+			alpha=.5,
+			name='pull_station',
+			visible=true,
+			capture=true,
+			ondown='set(dragging,true); draghotspot();',
+            onup='set(dragging,false); end_draghotspot();'
+			);
+
+	</action>
+	<action name="add_defib" scope="local">
+
+		addhotspot(defib, tb);
+		tb.loadstyle(poi|defib);
+		set(tb,
+			ath=get(view.hlookat),
+			zorder=100,
+			alpha=.5,
+			name='defib',
+			visible=true,
+			capture=true,
+			ondown='set(dragging,true); draghotspot();',
+            onup='set(dragging,false); end_draghotspot();'
+			);
+
+	</action>
+	<action name="add_el_em_phone" scope="local">
+
+		addhotspot(el_em_phone, tb);
+		tb.loadstyle(poi|el_em_phone);
+		set(tb,
+			ath=get(view.hlookat),
+			zorder=100,
+			alpha=.5,
+			visible=true,
+			capture=true,
+			ondown='set(dragging,true); draghotspot();',
+            onup='set(dragging,false); end_draghotspot();'
+			);
+
+	</action>
+	<action name="add_poi_spot" scope="local">
+			<!-- onloaded=add_tooltip('You must use onloaded=add_tooltip(text, y) method to add text', 5), -->
+		addhotspot(poi, tb);
+		tb.loadstyle(poi);
+		set(tb,
+			ath=get(view.hlookat),
+			zorder=100,
+			alpha=.5,
+			visible=true,
+			onloaded=add_tooltip(),
+			capture=true,
+			tt='NEW SPOT',
+			ondown='set(dragging,true); draghotspot();',
+            onup='set(dragging,false); end_draghotspot();'
+			);
+
+	</action>
+	<action name="add_sprinkler" scope="local">
+
+		addhotspot(sprinkler, tb);
+		tb.loadstyle(poi|sprinkler);
+		set(tb,
+			ath=get(view.hlookat),
+			zorder=100,
+			alpha=.5,
+			visible=true,
+			capture=true,
+			ondown='set(dragging,true); draghotspot();',
+            onup='set(dragging,false); end_draghotspot();'
+			);
+
+	</action>
+	<action name="add_warden_phone" scope="local">
+
+		addhotspot(warden_phone, tb);
+		tb.loadstyle(poi|warden_phone);
+		set(tb,
+			ath=get(view.hlookat),
+			zorder=100,
+			alpha=.5,
+			visible=true,
+			capture=true,
+			ondown='set(dragging,true); draghotspot();',
+            onup='set(dragging,false); end_draghotspot();'
+			);
+
+	</action>
+	<action name="add_door_release" scope="local">
+
+		addhotspot(door_release, tb);
+		tb.loadstyle(poi|door_release);
+		set(tb,
+			ath=get(view.hlookat),
+			zorder=100,
+			alpha=.5,
+			visible=true,
+			capture=true,
+			ondown='set(dragging,true); draghotspot();',
+            onup='set(dragging,false); end_draghotspot();'
+			);
+
+	</action>
+	<action name="add_firstaid" scope="local">
+
+		addhotspot(first_aid, tb);
+		tb.loadstyle(poi|first_aid);
+		set(tb,
+			ath=get(view.hlookat),
+			zorder=100,
+			alpha=.5,
+			visible=true,
+			capture=true,
+			ondown='set(dragging,true); draghotspot();',
+            onup='set(dragging,false); end_draghotspot();'
+			);
+
+	</action>
+	<action name="add_stair" scope="local">
+
+		addhotspot(stair, tb);
+		tb.loadstyle(poi|stair);
+		set(tb,
+			ath=get(view.hlookat),
+			zorder=100,
+			alpha=.5,
+			visible=true,
+			capture=true,
+			ondown='set(dragging,true); draghotspot();',
+            onup='set(dragging,false); end_draghotspot();'
+			);
+
+	</action>
+	<!-- <action name="create_tour_button" scope="local">
+		addhotspot(tour_button, tb);
+		tb.loadstyle(tour_button_style);
+		set(tb,
+			ath=get(view.hlookat),
+			zorder=100,
+			alpha=.5,
+			visible=true,
+			ondown='set(dragging,true); draghotspot();',
+            onup='set(dragging,false); end_draghotspot();'
+			);
+	</action> -->
+
+	<action name="create_infospot" scope="local">
+		addhotspot(temp_infospot, is);
+		is.loadstyle(exclamation_style);
+		set(is,
+			ath=get(view.hlookat),
+			zorder=102,
+			alpha=.5,
+			ondown='set(dragging,true); draghotspot();',
+            onup='set(dragging,false); end_draghotspot();'
+			);
+	</action>
+
+	<action name="create_monocle" scope="local">
+		addhotspot(temp_monocle, vm);
+		vm.loadstyle(view_monocle);
+		set(vm,
+			alpha=.5,
+			ath=get(view.hlookat),
+			zorder=107,
+			ondown='set(dragging,true); draghotspot();',
+            onup='set(dragging,false); end_draghotspot();'
+			);
+	</action>
+
+
+	<!-- <action name="skip_poi" scope="local" type="Javascript"><![CDATA[
+
+window.speechSynthesis.cancel();
+			player.pause();
+			player.close();		 
+		function checkForPoi() {
+			if(window.poi_list && window.poi_list.length > 0)
+			{
+				
+				poi = window.poi_list.shift();
+				if (window.poi_list.length == 0) {
+					window.poi_list = null;
+				}
+				krpano.call("update_poi(" + poi + ")");
+				
+			} else {
+				krpano.call("speak_callback()");
+			}	
+		}
+		window.voice_cancelled = true;
+checkForPoi();
+
+	]]></action> -->
+
+
+	
+
+	<action name="make_dev_links" type="Javascript"><![CDATA[
+
+		let x = args[1].content;
+
+		//let frag = x.replace(/..\/..\//g,'https://clients.aksafetynet.com/vr/560mission/');
+		let frag = x.replace(/..\/..\//g,'https://clients.pdxr.us/ak/1334york/');
+		let menu, dom = new DOMParser();
+		let hrefs = '';
+    	menu = dom.parseFromString(frag, 'text/html').getElementById("jump_menu").childNodes;
+		
+		menu.forEach(e => {
+			if (e.href) {
+				//console.log(e.href + "?welcome=true");
+				//hrefs += (e.href + "?all_floors=true\r");
+				//hrefs += (e.href + "?welcome=true\r");
+				hrefs += (e.href + "\r\n");
+			}
+    	});
+
+		/*menu.forEach(e => {
+			if (e.href) {
+				hrefs += (e.href + "\r");
+			}
+    	});*/
+
+		console.log(hrefs);
+	
+	]]></action>
+
+	<!-- <action name="create_doorspot" scope="local">
+		addhotspot(temp_doorspot, nd);
+		nd.loadstyle(door_style);
+		set(nd,
+			alpha=.5,
+			ath=get(view.hlookat),
+			zorder=102,
+			ondown='set(dragging,true); draghotspot();',
+            onup='set(dragging,false); end_draghotspot();'
+			);
+	</action> -->
+
+
+
+	<action name="create_hotspot" scope="local">
+		addhotspot(temp, h);
+		h.loadstyle(floorspot);
+		set(d, 150);
+		set(h,
+			ath=get(view.hlookat),
+			atv=get(view.vlookat),
+			alpha=0.5,
+			zorder=100,
+			onover='tween(scale,0.2); tween(alpha,0.5); copy(overspot,name);',
+			onout='delayedcall(0.1, set(global.overspot,null); );',
+			ondown='dragspot();',
+			onclick='showspotinfos();',
+			ondown='set(dragging,true); draghotspot();'',
+            onup='set(dragging,false); end_draghotspot();'
+			);
+	</action>
+	<action name="create_hotspot_3d" scope="local">
+		addhotspot(temp, h);
+		h.loadstyle(floorspot);
+        <!-- trace(get(hotspot[temp])); -->
+		set(d, 150);
+		set(h,
+			tx=calc(view.tx + d*view.dir.x),
+			ty=calc(view.ty + d*view.dir.y),
+			tz=calc(view.tz + d*view.dir.z),
+			ath=get(view.hlookat),
+			atv=get(view.vlookat),
+			alpha=0.5,
+			zorder=100,
+			onover='tween(scale,0.2); tween(alpha,0.5); copy(overspot,name);',
+			onout='delayedcall(0.1, set(global.overspot,null); );',
+			ondown='dragspot();',
+			onclick='showspotinfos();'
+			);
+	</action>
+	<!-- an action for dragging the helper tool layer -->
+	<!-- <action name="hsht_layerdragging" scope="localonly" args="layertodrag">
+		copy(backup_align, layertodrag.align);
+		copy(backup_edge, layertodrag.backup_edge);
+		layertodrag.changeorigin(lefttop,lefttop);
+		set(layertodrag.align,lefttop);
+		set(layertodrag.edge,lefttop);
+		layertodrag.updatepos();
+		copy(start_lx, layertodrag.pixelx);
+		copy(start_ly, layertodrag.pixely);
+		copy(start_mx, global.mouse.x);
+		copy(start_my, global.mouse.y);
+		asyncloop(caller.pressed,
+			calc(layertodrag.x, start_lx + global.mouse.x - start_mx);
+			calc(layertodrag.y, start_ly + global.mouse.y - start_my);
+			clamp(layertodrag.x, 1, calc(global.stagewidth - layertodrag.pixelwidth - 1));
+			clamp(layertodrag.y, 1, calc(global.stageheight - layertodrag.pixelheight - 1));
+		  ,
+			layertodrag.changeorigin(get(backup_align),get(backup_edge));
+		);
+	</action> -->
+
+
+	<!-- an action for add increase/decrease buttons on the value control -->
+	<action name="hsht_value_control_add_incdec_buttons">
+		calc(name_inc, name + '_inc');
+		calc(name_dec, name + '_dec');
+		addlayer(get(name_inc));
+		addlayer(get(name_dec));
+		copy(layer_inc, layer[get(name_inc)]);
+		copy(layer_dec, layer[get(name_dec)]);
+		layer_inc.loadstyle(hsht_button);
+		layer_dec.loadstyle(hsht_button);
+		copy(layer_inc.parent, name);
+		copy(layer_dec.parent, name);
+		set(layer_inc.align, right);
+		set(layer_dec.align, left);
+		set(layer_inc.html, '+');
+		set(layer_dec.html, '-');
+		set(layer_inc.ondown, set(stepdir,+1); hsht_value_control_incdec_ondown(); );
+		set(layer_dec.ondown, set(stepdir,-1); hsht_value_control_incdec_ondown(); );
+	</action>
+
+
+	<!-- an action for increasing or decreasing the button values -->
+	<action name="hsht_value_control_incdec_ondown">
+		copy(t1,timertick);
+		asyncloop(pressed,
+			calc(dt,timertick - t1);
+			if(dt GT 500,
+				callwith(calc('layer['+parent+']'),
+					calc(dt,timertick - t1);
+					calc(stepscale, dt GT 2000 ? (dt / 1000) : 1.0);
+					getvar();
+					calc(var, var + stepdir * stepscale * varstep / display.currentfps);
+					setvar();
+				);
+			);
+		  ,
+			calc(dt,timertick - t1);
+			if(dt LT 500,
+				callwith(calc('layer['+parent+']'),
+					getvar();
+					calc(var, (var + stepdir * varstep) / varstep);
+					Math.round(var);
+					calc(var, var * varstep);
+					setvar();
+				);
+			);
+		);
+	</action>
+
+
+	<!-- an action for changing the button value by dragging/moving the mouse around -->
+	<action name="hsht_value_control_ondown">
+		copy(startx, mouse.stagex);
+		copy(starty, mouse.stagey);
+		getvar();
+		copy(startv, var);
+		asyncloop(pressed,
+			calc(dx, (mouse.stagex - startx) / stagewidth );
+			calc(dy, (mouse.stagey - starty) / stageheight );
+			if(dx*dx GT dy*dy,
+				calc(var,startv + dx * vardragrange);
+			  ,
+				calc(var,startv + dy * vardragrange);
+			);
+			setvar();
+		  );
+	</action>
+
+
+</krpano>

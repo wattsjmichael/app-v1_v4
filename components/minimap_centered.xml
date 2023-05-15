@@ -1,0 +1,226 @@
+<krpano>
+
+	<!-- 
+
+		Minimap
+
+	 -->
+
+	<layer
+		name="radar"
+		style="radar_explore_style" keep="true"
+		url="../plugins/radar.js"
+		align="center" zorder="1"
+		scale.mobile="1.5"
+		linealpha="1"
+		parent="minimap_container"
+		scale=".6"
+	/>
+
+	<!-- <events onviewchanged="move_map" /> -->
+	<action name="move_map" scope="local">
+
+		set(s, get(hotspot[map_grid].scale));
+		<!-- set(off_x, calc(s*(global.init_offset_x*2)));
+		set(off_y, calc(s*(global.init_offset_y*2))); -->
+		<!-- set(hotspot[map_grid].tx, calc(off_x*-1));
+		set(hotspot[map_grid].tz, calc(off_y)); -->
+
+
+		<!-- trace(get(current_x));
+		trace(get(current_z)); -->
+		calc(new_x, calc(number(get(current_x))));
+		calc(new_y, calc(number(get(current_z))));
+		<!-- inc(new_x,calc(global.init_offset_x*get(s)));
+		inc(new_y,calc(global.init_offset_y*get(s))); -->
+		set(hotspot[map_grid].tx, calc(new_x*-1));
+		set(hotspot[map_grid].tz, calc(new_y*-1));
+
+
+
+	</action>
+
+    <action name="load_map" args="map,scale" scope="local">
+		set(layer[minimap_clipped].url, get(map));
+		set(hotspot[map_grid].url, get(map));
+		set(hotspot[map_grid].scale, get(scale));
+		updatescreen();
+	</action>
+    
+	<action name="show_big_map" scope="local">
+		move_map();
+        set(global.hlookat_map, get(view.hlookat));
+        set(global.vlookat_map, get(view.vlookat));
+        set(global.fov_map, get(view.fov));
+
+		for(set(i,0), i LT hotspot.count, inc(i),
+			set(hotspot[get(i)].visible, false);
+		);
+
+		set(layer[ui_bar].visible, false);
+		set(layer[minimap_container].visible, false);
+		set(layer[map_closer].visible, true);
+		set(layer[compass].visible, false);
+		set(layer[floor_vid_container].visible, false);
+
+		set(image.oy,-3000);
+        set(view.fovmax,360);
+
+		set(hotspot[map_grid].visible, true);
+		set(hotspot[map_grid].alpha, 1);
+		set(hotspot[map_grid].capture, true);
+		set(hotspot[nadir_spot].visible, false);
+
+		tween(view.fov, 171);
+		<!-- trace(get(hotspot[map_grid].width));
+		trace(get(hotspot[map_grid].height)); -->
+
+		set(view.hlookat, calc(global.map_angle));
+		set(control.usercontrol,mouse);
+		tween(view.vlookat, 90, 0.5, default,
+			show_all_mapspots();
+		);
+		<!-- updatescreen(); -->
+
+	</action>
+
+    <action name="hide_big_map" scope="local">
+		loadscene(get(scene_name), null, MERGE|KEEPVIEW, BLEND(.1, default));
+
+		set(layer[ui_bar].visible, true);
+		set(layer[compass].visible, true);
+		set(layer[minimap_container].visible, true);
+		set(layer[map_closer].visible, false);
+        set(cs, get(scene[get(scene_name)]));
+
+		set(layer[floor_vid_container].visible, true);
+
+
+		set(image.oy,0);
+        set(view.fovmax,120);
+		set(hotspot[map_grid].alpha, 0);
+		tween(view.fov, get(global.fov_map));
+		set(view.hlookat, get(global.hlookat_map));
+		tween(view.vlookat, get(global.vlookat_map), 1, 'easeOutQuad',
+        	updatescreen();
+			if (get(caller.linkedscene) != null,
+				shoosh(get(caller.linkedscene));
+			);
+		);
+		set(hotspot[map_grid].capture, false);
+		set(control.usercontrol,all);
+
+		updatescreen();
+
+	</action>
+
+    <action name="toggle_big_map">
+        if (hotspot[map_grid].alpha == 1
+        ,
+        hide_big_map();
+        ,
+        show_big_map();
+        );
+	</action>
+
+	<action name="show_all_mapspots">
+		set(cs, get(scene[get(scene_name)]));
+        <!-- set(sc, get(plugin[scene])); -->
+		trace(scene_name);
+		plugin[scene].get_path_map(get(scene_name),get(cs.floor_id));
+		updatescreen();
+	</action>
+
+	<action name="make_mapspot" scope="local" args="ox,oz,oy,name,f">
+        <!-- make the mapspot -->
+		set(new_x, get(ox));
+		set(new_z, get(oz));
+		inc(new_x, calc(get(start_x)));
+		inc(new_z, calc(get(start_z)));
+
+		if (scene_name EQ hs.name,
+				addhotspot(get(name), hs);
+			hs.loadstyle(big_mapspot);
+			set(hs.tx, get(new_x));
+			set(hs.tz, get(new_z));
+			calc(hs.ty, calc(number(get(oy))+number(get(floor_height))));
+			set(hs.linkedscene, get(name));
+			addhotspot(map_radar, mr);
+			mr.loadstyle(radar_map_style);
+			set(mr.tx, get(new_x));
+			set(mr.tz, get(new_z));
+			calc(mr.ty, calc(number(get(oy))+number(get(floor_height))));
+			set(mr.ry, get(global.hlookat_map));
+		);
+		set(it, calc(get(f)));
+		trace(get(it));
+		if (it GT 0
+		,
+		addhotspot(get(name), hs);
+		hs.loadstyle(big_mapspot);
+		set(hs.tx, get(new_x));
+		set(hs.tz, get(new_z));
+		calc(hs.ty, calc(number(get(oy))+number(get(floor_height))));
+		set(hs.linkedscene, get(name));
+		);
+
+    </action>
+	<!-- <action name="make_mapspot" scope="local" args="ox,oz,oy,name,f">
+		set(new_x, get(ox));
+		set(new_z, get(oz));
+		inc(new_x, calc(get(start_x)));
+		inc(new_z, calc(get(start_z)));
+		addhotspot(get(name), hs);
+		hs.loadstyle(big_mapspot);
+		if (scene_name EQ hs.name,
+			addhotspot(map_radar, mr);
+			mr.loadstyle(radar_map_style);
+			set(mr.tx, get(new_x));
+			set(mr.tz, get(new_z));
+			calc(mr.ty, calc(number(get(oy))+number(get(floor_height))));
+			set(mr.ry, get(global.hlookat_map));
+		);
+		set(it, calc(get(f)));
+		if (it GT 0
+		,
+		set(hs.bgborder, "20 0x00FFFF 1");
+		set(hs.html, "!");
+		);
+		if (scene[get(name)].stair
+		,
+		txtadd(new_txt, 'S' , get(scene[get(name)].stair));
+		set(hs.html, get(new_txt));
+		set(hs.bgalpha, .8);
+		);
+		set(hs.tx, get(new_x));
+		set(hs.tz, get(new_z));
+		calc(hs.ty, calc(number(get(oy))+number(get(floor_height))));
+		set(hs.linkedscene, get(name));
+    </action> -->
+
+	<action name="offset_radar" scope="local" args="x, y, s, bs">
+		<!-- set(global.spawn_scene, get(scene[get(scene_name)].name)); -->
+		<!-- copy(global.start_x, global.current_x);
+		copy(global.start_z, global.current_z); -->
+		set(global.init_offset_x, get(x));
+		set(global.init_offset_y, get(y));
+		set(global.minimap_scale, get(s));
+		set(global.bigmap_scale, get(bs));
+		set(layer[radar].heading, -90);
+		update_minimap_grid(0);
+
+	</action>
+
+	<action name="update_minimap_grid" args="time" scope="local">
+		set(s, get(global.minimap_scale));
+        <!-- new x shoudl be *-1 -->
+		calc(new_x, calc(number(get(current_x))*number(s)*-1));
+		calc(new_y, calc(number(get(current_z))*number(s)));
+		inc(new_x,calc(global.init_offset_x));
+		inc(new_y,calc(global.init_offset_y));
+		tween(layer[minimap_clipped].x, calc(get(new_x)), get(time), "linear");
+        tween(layer[minimap_clipped].y, calc(get(new_y)), get(time), "linear");
+
+	</action>
+
+</krpano>

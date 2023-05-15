@@ -1,0 +1,491 @@
+<krpano>
+
+    <!-- blend events -->
+    <events onblendcomplete="blend_finished" />
+
+	<action name="blend_finished" scope="local">
+		<!-- set(sc,get(plugin[scene])); -->
+		plugin[scene].get_path_local(get(scene_name));
+		<!-- get_path_local(get(scene_name)); -->
+		init_scene();
+	</action>
+
+
+	<!-- 
+		
+		SHUTTLE
+		
+	-->
+	<action name="shoosh_finished" scope="local">
+	    <!-- update_floor(); -->
+		copy(local.hlval, view.hlookat);
+		if(angle != null
+		,
+			if (roundval(angle) != roundval(hlval)
+			,
+			set(view.vlookat, 0);
+			lookto(get(angle),0,get(view.fov),tween(easeoutquart,.5),true,false);			
+			);
+		);
+		<!-- set(sc,get(plugin[scene])); -->
+		plugin[scene].get_path_local(get(scene_name));
+		<!-- get_path_local(get(scene_name)); -->
+		shoosh_callback();
+	</action>
+
+	<action name="shoosh" args="end,constrain" scope="local">
+		<!-- set(layer[minimap_container].visible, false); -->
+		tween(view.fov,get(shoosh_fov),1);
+		set(events.onblendcomplete, shoosh_finished);
+		find_tour_path(get(scene_name), get(end), get(constrain));
+		<!-- shoosh_callback(get(scene_name)); -->
+		gyro_off();
+	</action>
+
+	<!-- explore and tour variants -->
+	<!-- <action name="finish_shoosh" args="item" scope="local"></action> -->
+
+	<action name="teleport_callback" type="Javascript"><![CDATA[
+
+		krpano.call('finish_teleport(' + sessionStorage.getItem("search_item") + ')');
+		
+	]]></action>
+<!-- preload the next pano n panos ahead -->
+	<action name="shoosh_callback" type="Javascript"><![CDATA[
+		let a = null;
+		let gtp = window.guided_tour_path;
+		if (gtp && gtp.length > 4) {
+			console.log(gtp[4]);
+		}
+		let o;
+		let p = window.tour_path;
+		let ss = args[1];
+		let ssa = null;
+		if (gtp && gtp.length > 0) {
+			o = window.guided_tour_path.shift();
+			if (o) {
+				if (gtp.length == 0) {
+					window.guided_tour_path = null;
+					krpano.call('next_scene('+o+')');
+				} else {
+					if (ss) {
+						ssa = window.tourpress.angle(p[ss.toLowerCase()].global_position[0],p[ss.toLowerCase()].global_position[1],p[o.toLowerCase()].global_position[0],p[o.toLowerCase()].global_position[1]);
+					}
+ 					a = window.tourpress.angle(p[o.toLowerCase()].global_position[0],p[o.toLowerCase()].global_position[1],p[gtp[0].toLowerCase()].global_position[0],p[gtp[0].toLowerCase()].global_position[1]);
+					krpano.call('next_scene('+o+',' + a  + ','+ ssa +')');
+				}
+			}
+		} else {
+			window.guided_tour_path = null;
+			krpano.call('finish_shoosh(' + sessionStorage.getItem("search_item") + ')');
+			//sessionStorage.setItem("search_item", null);
+		}
+
+	
+	]]></action>
+
+	<action name="search_for_item_teleport" type="Javascript"><![CDATA[
+
+		window.guided_tour_path = []; // set to false when all steps are done use this var in speak interval
+
+		let p = window.tour_path;
+		let path = window.guided_tour_path;
+		let begin = args[1].toLowerCase();
+		let search_item = args[2].toLowerCase();
+		let end;
+		let checked = {};
+		let q = [];
+		let found = false;
+
+		sessionStorage.setItem("search_item", search_item);
+		
+		
+		function get_children(o) {
+			
+			let a = o.children.slice();
+			if (o.parent) {
+				a.push(o.parent);
+			}
+			return a;
+		}
+
+		function traverseChildren(pano) {
+
+			// the intital iteration, vars instantiated above
+			q.push({n:pano,p:false});
+
+			while (q.length > 0) {
+
+				let x = q.shift();
+				let n = x.n;
+				let o = p[n];
+				let c;
+				let items;
+
+				if (checked[n] == undefined) {
+					checked[n] = x.p;
+					items = p[n].items;
+					for (var i = 0 ; i < items.length ; i++) {
+
+						if (search_item == items[i]) {
+							found = n;
+						}
+					}
+
+					if (found) {
+						q = [];
+					} else {
+						if (o) {
+							c = get_children(o);
+							if (c.length > 0) {
+								for (let i = 0 ; i < c.length ; i++) {
+									q.push({n:c[i],p:n});
+								}
+							}		
+						}
+					}
+				}
+			}
+		}
+
+		traverseChildren(begin);
+		if (found) {
+			krpano.call('loadscene(' + found + ', null, MERGE|KEEPVIEW);');
+			krpano.set('scene_name', found);
+		} else {
+			throw search_item.toUpperCase() + " NOT FOUND";
+		}
+		
+	
+	]]></action>
+	<!-- <action name="search_for_item_teleport" type="Javascript"><![CDATA[
+
+		window.guided_tour_path = []; // set to false when all steps are done use this var in speak interval
+
+		let path = window.tour_path;
+		let search_item = args[2].toLowerCase();
+		let found = [];
+
+		sessionStorage.setItem("search_item", search_item);
+		sessionStorage.setItem("current_query", search_item);
+		
+
+		for (o in path) {
+
+			let p = path[o].items;
+			for (x in p) {
+				let i = p[x];
+				if(search_item == i) {
+					found.push(o);
+				}
+			}
+
+		}
+
+		if (found.length > 0) {
+			krpano.call('loadscene(' + found[0] + ', null, MERGE|KEEPVIEW);');
+			krpano.set('scene_name', found[0]);
+			//krpano.call('preload_local(get(scene_name))');
+					
+		} else if (found.length == 0) {
+			throw search_item.toUpperCase() + " NOT FOUND";
+		}
+		
+	
+	]]></action> -->
+
+
+	<!-- 
+
+		PATH OPERATIONS
+
+	 -->
+
+
+	<action name="set_initial_position" args="x,z,y" scope="local">
+
+		set(global.current_x,get(x));
+		set(global.current_z,get(z));
+		set(global.current_y,get(y));
+		
+	</action>
+
+
+	<action name="get_path" type="Javascript"><![CDATA[
+
+			let path = window.tour_path;
+			let sf = args[2];
+			if (args[1]) {
+				window.current_position = [path[args[1]].global_position[0].toString(),path[args[1]].global_position[1].toString(),path[args[1]].global_position[2].toString()];
+			}
+			let cp = window.current_position;
+			let o, p, tx, tz, ty, c = true;
+
+			for (o in path) {
+				
+
+				p = path[o];
+				c = p.children.length;
+				//apply offset value here
+				tx = p.global_position[0] -= cp[0];
+				tz = p.global_position[1] -= cp[1];
+				ty = p.global_position[2] -= cp[2];
+
+				if (sf) {
+					if (sf == p.floor) {
+						krpano.call("make_floorspot("+tx+","+tz+","+ty+","+String(o)+","+c+")");
+					}
+				} else {
+					krpano.call("make_floorspot("+tx+","+tz+","+ty+","+String(o)+","+c+")");
+				}
+
+			}
+
+	]]></action>
+
+	<action name="update_path_history" type="Javascript"><![CDATA[
+
+		window.current_position = [args[1],args[2],args[3]];
+
+	]]></action>
+
+	<action name="make_symbolic_link" type="Javascript"><![CDATA[
+
+		let o = window.tour_path;
+		o[args[1].toLowerCase()].children.push(args[2].toLowerCase());
+		o[args[2].toLowerCase()].children.push(args[1].toLowerCase());
+		
+	]]></action>
+
+	<action name="search_for_item" type="Javascript"><![CDATA[
+
+		window.guided_tour_path = []; // set to false when all steps are done use this var in speak interval
+
+		let p = window.tour_path;
+		let path = window.guided_tour_path;
+		let begin = args[1].toLowerCase();
+		let search_item = args[2].toLowerCase();
+		let end;
+		let checked = {};
+		let q = [];
+		let found = false;
+		let constrain = args[3];
+		let curr_floor = krpano.get("plugin[scene].curr_floor");
+
+		sessionStorage.setItem("search_item", search_item);
+		
+		
+		function get_children(o) {
+			
+			let a = o.children.slice();
+			if (o.parent) {
+				a.push(o.parent);
+			}
+			return (!constrain) ? a : (o.floor == curr_floor) ? a : [];
+		}
+
+		function traverseChildren(pano) {
+
+			// the intital iteration, vars instantiated above
+			q.push({n:pano,p:false});
+
+			while (q.length > 0) {
+
+				let x = q.shift();
+				let n = x.n;
+				let o = p[n];
+				let c;
+				let items;
+
+				if (checked[n] == undefined) {
+					checked[n] = x.p;
+					items = p[n].items;
+					for (var i = 0 ; i < items.length ; i++) {
+
+						if (search_item == items[i]) {
+							found = n;
+						}
+					}
+
+					if (found) {
+						q = [];
+					} else {
+						if (o) {
+							c = get_children(o);
+							if (c.length > 0) {
+								for (let i = 0 ; i < c.length ; i++) {
+									q.push({n:c[i],p:n});
+								}
+							}		
+						}
+					}
+				}
+			}
+		}
+		//console.log("search for item");
+		function order_path(pano) {
+			var o = checked[pano];
+			var p;
+			if (o) {
+				path.push(pano);
+				p = pano.toUpperCase();
+				order_path(o);			
+			}
+		} 
+
+		traverseChildren(begin);
+		if (found) {
+			order_path(found);
+			path.reverse();
+			for (var z = 0 ; z < 4; z++) {
+					let pp = path[z];
+					console.log(pp);
+					preloadImage('panos/' + pp + '.tiles/preview.jpg');
+					preloadImage('panos/' + pp + '.tiles/pano_f.jpg');
+					preloadImage('panos/' + pp + '.tiles/pano_l.jpg');
+					preloadImage('panos/' + pp + '.tiles/pano_r.jpg');
+					preloadImage('panos/' + pp + '.tiles/pano_u.jpg');
+					preloadImage('panos/' + pp + '.tiles/pano_d.jpg');
+					preloadImage('panos/' + pp + '.tiles/pano_b.jpg');
+
+
+			}
+		} else {
+			throw search_item.toUpperCase() + " NOT FOUND";
+		}
+
+		console.log(path);
+		
+	
+	]]></action>
+
+	<action name="find_tour_path" type="Javascript"><![CDATA[
+
+		window.guided_tour_path = []; // set to false when all steps are done use this var in speak interval
+
+		let p = window.tour_path;
+		let path = window.guided_tour_path;
+		let begin = args[1].toLowerCase();
+		let end = args[2].toLowerCase();
+		let constrain = args[3];
+		let curr_floor = krpano.get("plugin[scene].curr_floor");
+		let checked = {};
+		let q = [];
+
+		function get_children(o) {
+			
+			let a = o.children.slice();
+			if (o.parent) {
+				a.push(o.parent);
+			}
+			return (!constrain) ? a : (o.floor == curr_floor) ? a : [];
+		}
+
+		function traverseChildren(pano) {
+
+			// the intital iteration, vars instantiated above
+			q.push({n:pano,p:false});
+
+			while (q.length > 0) {
+
+				let x = q.shift();
+				let n = x.n;
+				let o = p[n];
+				let c;
+
+				if (checked[n] == undefined) {
+					checked[n] = x.p;
+
+					if (n == end) {
+						q = [];
+					} else {
+						if (o) {
+							c = get_children(o);
+							if (c.length > 0) {
+								for (let i = 0 ; i < c.length ; i++) {
+									q.push({n:c[i],p:n});
+								}
+							}		
+						}
+					}
+				}	
+
+			}
+			//console.log(checked);
+		}
+
+		function order_path(pano) {
+			var o = checked[pano];
+			var p;
+			if (o) {
+				path.push(pano);
+				p = pano.toUpperCase()
+				preloadImage('panos/' + p + '.tiles/preview.jpg');
+				//if(!ismobile) {
+					preloadImage('panos/' + p + '.tiles/pano_f.jpg');
+					preloadImage('panos/' + p + '.tiles/pano_l.jpg');
+					preloadImage('panos/' + p + '.tiles/pano_r.jpg');
+					preloadImage('panos/' + p + '.tiles/pano_u.jpg');
+					preloadImage('panos/' + p + '.tiles/pano_d.jpg');
+					preloadImage('panos/' + p + '.tiles/pano_b.jpg');
+				//}
+				order_path(o);			
+			}
+		} 
+
+		// get the path and start the transition
+		traverseChildren(begin);
+		order_path(end);
+		path.reverse();
+
+		if (path.length != 0) {
+			krpano.call("shoosh_callback('" + begin + "')");
+		} else {
+			krpano.call("shoosh_callback('" + begin + "')");
+			krpano.call("delayedcall(.25, open_poi('error_screen'))");
+		}
+
+
+
+	
+	]]></action>
+
+	<action name="preload_local" type="Javascript"><![CDATA[
+
+		let p = window.tour_path;
+		let o = p[args[1]] || false;
+		let children;
+		let parent;
+		let child;
+
+		if (o.parent) {			
+			parent = o.parent.toUpperCase();
+			preloadImage('panos/' + parent + '.tiles/preview.jpg');
+			//if(!ismobile) {
+				preloadImage('panos/' + parent + '.tiles/pano_f.jpg');
+				preloadImage('panos/' + parent + '.tiles/pano_l.jpg');
+				preloadImage('panos/' + parent + '.tiles/pano_r.jpg');
+				preloadImage('panos/' + parent + '.tiles/pano_u.jpg');
+				preloadImage('panos/' + parent + '.tiles/pano_d.jpg');
+				preloadImage('panos/' + parent + '.tiles/pano_b.jpg');
+			//}
+		}
+
+		if (o.children) {	
+			for (var i = 0;i < o.children.length;i++) {
+				child = o.children[i].toUpperCase();
+				preloadImage('panos/' + child + '.tiles/preview.jpg');
+				//if(!ismobile) {
+					preloadImage('panos/' + child + '.tiles/pano_f.jpg');
+					preloadImage('panos/' + child + '.tiles/pano_l.jpg');
+					preloadImage('panos/' + child + '.tiles/pano_r.jpg');
+					preloadImage('panos/' + child + '.tiles/pano_u.jpg');
+					preloadImage('panos/' + child + '.tiles/pano_d.jpg');
+					preloadImage('panos/' + child + '.tiles/pano_b.jpg');
+				//}
+			}
+		}
+
+	]]></action>
+
+</krpano>

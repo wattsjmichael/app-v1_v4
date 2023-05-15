@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>geoJSON To Tour XML Generator</title>
+
+    <style>
+        body {
+            font: 14px "Arial", sans-serif;
+        }
+
+        #listing {
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+
+
+    <input type="file" onchange="readFile(this)">
+
+    <div id="listing"></div>
+    <br><BR>
+    <div id="frag" style="visibility:hidden"></div>
+
+
+
+    <script>
+
+        /*
+
+Sub ExportAsCSV()
+
+    Dim MyFileName As String
+    Dim CurrentWB As Workbook, TempWB As Workbook
+
+    Set CurrentWB = ActiveWorkbook
+    ActiveWorkbook.ActiveSheet.UsedRange.Copy
+
+    Set TempWB = Application.Workbooks.Add(1)
+    With TempWB.Sheets(1).Range("A1")
+        .PasteSpecial xlPasteValues
+        .PasteSpecial xlPasteFormats
+    End With
+
+    MyFileName = CurrentWB.Path & "\" & Left(CurrentWB.Name, InStrRev(CurrentWB.Name, ".") - 1) & ".csv"
+    'Optionally, comment previous line and uncomment next one to save as the current sheet name
+    'MyFileName = CurrentWB.Path & "\" & CurrentWB.ActiveSheet.Name & ".csv"
+
+
+    Application.DisplayAlerts = False
+    TempWB.SaveAs Filename:=MyFileName, FileFormat:=xlCSV, CreateBackup:=False, Local:=True
+    TempWB.Close SaveChanges:=False
+    Application.DisplayAlerts = True
+End Sub
+
+        */
+
+        /*
+        
+            Generate XML for tour
+            Drag and drop folders to window
+        
+        */
+        console.log("GUIDED TOUR GENERATOR");
+        let txt = '';
+        txt += '<!-- GUIDED TOUR -->';
+        txt += "\r\n";
+        txt += "\r\n";
+
+        function readFile(input) {
+            let file = input.files[0];
+            let reader = new FileReader();
+            reader.readAsText(file);
+            reader.onload = function () {
+                makeTourXML(reader.result);
+            };
+            reader.onerror = function () {
+                console.log(reader.error);
+            };
+        }
+
+
+        function makeTourXML(result) {
+            let a = CSVToArray(result);
+            parse_csv(a);
+        }
+
+        /*
+
+Tour ID,VO,VO Phonetics,POI ID,Post Text,Link,Actions/Notes,Next floor link,Char #
+
+
+        */
+
+        function parse_csv(a) {
+
+            console.log("DATA", a);
+            let stops = [];
+            let poi = [];
+            let id = null;
+            let r;
+            let obj_count = {};
+
+            for (r = 1; r < a.length - 1; r++) {
+                let o = {};
+                let linkAddress = a[r][5].trim();
+                o.linkedscene = linkAddress.split("scene_id=")[1].toUpperCase();
+
+                if (id != o.linkedscene) {
+
+                    o.tour_id = a[r][0].trim();
+                    o.content = "<![CDATA[" + a[r][1].trim() + "]]>";
+                    if (a[r][7]) {
+                        o.onclick = "make_tour_url(" + a[r][7].trim() + ");"
+                    }
+
+                    //takes the angle from the link
+                    let linkAngle = linkAddress.split('(').pop().split(',')[0];
+                    //save the starting position angle to the link.
+                   o.ath = linkAngle || 0;
+                         
+
+                    if (a[r][3]) {
+                        o.poi = a[r][3].trim();
+                    }
+                    if (a[r][4]) {
+                        o.post = a[r][4].trim();
+                    }
+                    console.log(o);
+                    stops.push(o);
+
+                } else {
+
+                    o.name = o.linkedscene;
+                    o.content = "<![CDATA[" + a[r][1].trim() + "]]>";
+                    if (a[r][3]) {
+                        o.poi = a[r][3].trim();
+                    }
+                    if (a[r][4]) {
+                        o.post = a[r][4].trim();
+                    }
+
+
+                    poi.push(o);
+
+                }
+
+                id = o.linkedscene;
+
+            }
+
+            let frag = document.createDocumentFragment();
+            id = null;
+
+            for (r = 0; r < stops.length; r++) {
+
+                var el = document.createElement("data");
+                var atts = stops[r];
+                var att;
+
+                for (var o in atts) {
+                    if (String(o) != "content") {
+                        att = document.createAttribute(o);
+                        if (String(o) == "linkedscene") {
+                            att.value = atts[o].toUpperCase();
+                        } else {
+                            att.value = atts[o];
+                        }
+                        el.setAttributeNode(att);
+                    } else {
+                        var t = document.createTextNode(atts[o]);
+                        el.appendChild(t);
+                    }
+                }
+                frag.appendChild(el);
+
+
+            }
+
+
+            var cnt = 0;
+            for (r = 0; r < poi.length; r++) {
+
+                var el = document.createElement("data");
+                var atts = poi[r];
+                var att;
+
+                // identify the poi count
+                if (!obj_count[atts["name"]]) {
+                    obj_count[atts["name"]] = 1;
+                } else {
+                    obj_count[atts["name"]]++;
+                }
+
+
+                // find the parent
+                var p = frag.querySelector('[linkedscene="' + atts["name"].toUpperCase() + '"]');
+                if (p.hasAttribute("linkedpoi")) {
+                    var lp_att = p.getAttribute("linkedpoi");
+                    p.setAttribute("linkedpoi", lp_att + "|" + atts["name"].toUpperCase() + "_" + obj_count[atts["name"]]);
+                } else {
+                    p.setAttribute("linkedpoi", atts["name"].toUpperCase() + "_" + obj_count[atts["name"]]);
+                }
+
+                for (var o in atts) {
+                    if (String(o) != "content") {
+                        att = document.createAttribute(o);
+                        if (String(o) == "name") {
+                            att.value = atts[o].toUpperCase() + "_" + obj_count[atts["name"]];
+                        } else {
+                            att.value = atts[o];
+                        }
+                        el.setAttributeNode(att);
+                    } else {
+                        var t = document.createTextNode(atts[o]);
+                        el.appendChild(t);
+                    }
+                }
+
+                frag.appendChild(el);
+
+            }
+
+            document.getElementById("frag").appendChild(frag);
+            console.log(frag);
+
+            var data_elements = document.getElementsByTagName("data");
+
+            for (var i = 0, len = data_elements.length; i < len; i++) {
+                txt += data_elements[i].outerHTML.replace("&lt;", "<").replace("&gt;", ">");
+                txt += "\r\n";
+                txt += "\r\n";
+
+                //console.log(data_elements[i].outerHTML.replace("&"));
+            }
+
+
+            listing.innerText = txt;
+
+        }
+
+        function CSVToArray(strData, strDelimiter) {
+            // Check to see if the delimiter is defined. If not,
+            // then default to comma.
+            strDelimiter = (strDelimiter || ",");
+
+            // Create a regular expression to parse the CSV values.
+            var objPattern = new RegExp(
+                (
+                    // Delimiters.
+                    "(\\" + strDelimiter + "|\\r?\\n|\\r|^)" +
+
+                    // Quoted fields.
+                    "(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|" +
+
+                    // Standard fields.
+                    "([^\"\\" + strDelimiter + "\\r\\n]*))"
+                ),
+                "gi"
+            );
+
+
+            // Create an array to hold our data. Give the array
+            // a default empty first row.
+            var arrData = [[]];
+
+            // Create an array to hold our individual pattern
+            // matching groups.
+            var arrMatches = null;
+
+
+            // Keep looping over the regular expression matches
+            // until we can no longer find a match.
+            while (arrMatches = objPattern.exec(strData)) {
+
+                // Get the delimiter that was found.
+                var strMatchedDelimiter = arrMatches[1];
+
+                // Check to see if the given delimiter has a length
+                // (is not the start of string) and if it matches
+                // field delimiter. If id does not, then we know
+                // that this delimiter is a row delimiter.
+                if (
+                    strMatchedDelimiter.length &&
+                    (strMatchedDelimiter != strDelimiter)
+                ) {
+
+                    // Since we have reached a new row of data,
+                    // add an empty row to our data array.
+                    arrData.push([]);
+
+                }
+
+
+                // Now that we have our delimiter out of the way,
+                // let's check to see which kind of value we
+                // captured (quoted or unquoted).
+                if (arrMatches[2]) {
+
+                    // We found a quoted value. When we capture
+                    // this value, unescape any double quotes.
+                    var strMatchedValue = arrMatches[2].replace(
+                        new RegExp("\"\"", "g"),
+                        "\""
+                    );
+
+                } else {
+
+                    // We found a non-quoted value.
+                    var strMatchedValue = arrMatches[3];
+
+                }
+
+
+                // Now that we have our value string, let's add
+                // it to the data array.
+                arrData[arrData.length - 1].push(strMatchedValue);
+            }
+
+            // Return the parsed data.
+            return (arrData);
+        }
+
+    </script>
+
+</body>
+</head>

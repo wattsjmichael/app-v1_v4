@@ -1,0 +1,325 @@
+<krpano>
+
+
+
+	<style name="blank" type="text" fov="120" enabled="false" visible="false" atv="0" onclick="" capture="false" />
+	<style name="poi" fov="120" alpha="1" scale=".4" zorder="2" distorted="true" torigin="view" enabled="true" visible="true" atv="0" onclick="" onover="tween(scale,.75,.25,easeinbouce);" onout="tween(scale,.4)" capture="false" url="skin/%$skin%/cyan_dot.png" onloaded="add_tooltip()" />
+	<style name="tooltip" keep="false" type="text" css="color:#00fcff;font-size:18px;text-align:center;" bgcolor="0x000000" padding="4 8" bgroundedge="10" bgborder="1 0x00fcff 1" oversampling="2" mipmapping="true" capture="false" enabled="false" visible="true" bgalpha=".7" />
+	<style name="street_sign" atv="-30" keep="true" type="text" css="color:white;font-size:14px;text-align:center;" bgcolor="0x006600" padding="4 8" bgroundedge="10" bgborder="1 0xFFFFFF 1"  handcursor="false" oversampling="2" mipmapping="true" capture="false" enabled="false" visible="true" bgalpha=".7" />
+	<style name="stair" tt="STAIR" type="text" />
+	<style name="fire_ext" fov="80" type="text" tt="Fire Extinguisher" />
+	<style name="defib" fov="80" type="text" tt="Defibrillator" />
+	<style name="sprinkler" type="text" tt="Sprinkler" />
+	<style name="warden_phone" tt="Warden Phone" type="text" />
+	<style name="em_phone" tt="Emergency Phone" type="text" />
+	<style name="ff_phone" tt="Firefighter Phone" type="text" />
+	<style name="el_em_phone" tt="Elevator Emergency Phone" type="text" />
+	<style name="blue_phone" tt="Emergency Phone" type="text" />
+	<style name="pull_station" type="text" tt="Manual Pull Station" />
+	<style name="first_aid" type="text" tt="First Aid Station" />
+	<style name="em_cat_phone" type="text" tt="Emergency Phone" />
+	<style name="em_light" type="text" tt="Emergency Lighting" />
+	<style name="evac_sign" type="text" tt="Evacuation Signage" />
+	<style name="sp_strobe" type="text" tt="Speaker Strobe" />
+
+	<!-- top ui bar -->
+	<layer name="ui_bar" style="ui_bar_style_tour">
+		<layer if="debugmode == true" interactivecontent="true" name="debug_button" type="text" html="!" y="10" x="145" scale=".16" onclick="toggle_debug();" bgcolor="0x000000" bgalpha=".2" css="font-family:Arial; font-size:11px; color:#FFFFFF;" padding="4" bgborder="1 0xffffff 1" />
+		<layer name="home_button" style="ui_icon_style" url="skin/%$skin%/home.png" x="15" onclick="plugin[tour].tour_home();" />
+		<layer name="tour_button" style="ui_icon_style" url="skin/%$skin%/tour_on.png" y="9" x="40" onclick="toggle_tour()"/>
+		<layer name="floor_text" style="floortext_style" x="110" align="right" handcursor="false" alpha=".75" />
+		<layer name="floor_menu" scale=".2" x="85" align="right" url="skin/%$skin%/hamburger.png" alpha=".5" handcursor="false" />
+		<layer name="items_but" scale=".2" x="55" align="right" url="skin/%$skin%/feature_menu.png" handcursor="false" onclick="open_item_lib()" alpha=".5" />
+		<layer name="video_lib" scale=".05" align="right" x="15" url="skin/%$skin%/play.png" alpha=".5" handcursor="false" />
+	</layer>
+
+	<!-- the tour controls -->
+	<layer name="tour_controls" type="container" align="top" width="100%" height="100%" keep="true">
+		<layer name="tour_ffrew_left_bg" y="90" x="-125" width="85" bgcolor="0xFFFF00" height="85" bgroundedge="42.5" alpha="0" style="tour_controls_style" />
+		<layer name="tour_ffrew_right_bg" y="90" x="125" width="85" bgcolor="0xFFFF00" height="85" bgroundedge="42.5" alpha="0" style="tour_controls_style" />
+		<layer name="tour_ffrew_left" y="90" x="-125" width="75" height="75" style="tour_controls_style">
+			<layer name="rew_tour_control" url="skin/%$skin%/ff_rew.png" keep="true" align="center" width="65" height="65" alpha=".5" rotate="180" onclick="set(layer[tour_ffrew_left_bg].alpha,1); tween(layer[tour_ffrew_left_bg].alpha, 0,2, easeoutback );  set(layer[rew_tour_control].alpha,.75); tween(layer[rew_tour_control].alpha, .5,2, easeoutback); plugin[tour].tour_back();"/>
+		</layer>
+		<layer name="tour_ffrew_right" y="90" x="125" width="75" height="75" style="tour_controls_style" alpha=".4" enabled="false" handcursor="false">
+			<layer name="ff_tour_control" url="skin/%$skin%/ff_rew.png" keep="true" align="center" width="65" height="65" alpha=".5" onclick="set(layer[tour_ffrew_right_bg].alpha,1); tween(layer[tour_ffrew_right_bg].alpha, 0,2, easeoutback ); set(layer[ff_tour_control].alpha,.75); tween(layer[ff_tour_control].alpha, .5,2, easeoutback); plugin[tour].tour_forward();" />
+		</layer>
+	</layer>
+	<layer name="media_controls" type="container" align="top" width="100%" height="100%" keep="true">
+		<layer name="tour_control_bg" y="90" width="165" bgcolor="0xFF0000" height="165" alpha="0" bgroundedge="82.5" style="tour_controls_style" />
+		<layer name="tour_control_container" y="90" style="tour_controls_style">
+			<layer name="pause_tour_control" url="skin/%$skin%/play.png" keep="true" width="150" height="150" alpha=".5" onclick="plugin[tour].toggle_pause(); set(layer[tour_control_bg].alpha,1); tween(layer[tour_control_bg].alpha, 0,2, easeoutback ); set(layer[pause_tour_control].alpha,.75); tween(layer[pause_tour_control].alpha, .5,2, easeoutback );"/>
+		</layer>
+	</layer>
+
+
+
+	<!-- style overwrites -->
+	<style name="content_icon_style" alpha="1" scale=".4" zorder="2" distorted="true" torigin="view" enabled="false" visible="true" atv="0" onclick="" onover="tween(scale,.75,.25,easeinbouce)" onout="tween(scale,.4)" capture="false" handcursor="false" />
+	<style name="fire_ext" onclick="" onover="" handcursor="false" />
+	<style name="defib" onclick="" onover="" handcursor="false" />
+	<style name="warden_phone" onclick="" onover="" handcursor="false" />
+	<style name="el_em_phone" onclick="" onover="" handcursor="false" />
+	<style name="pull_station" onclick="" onover="" handcursor="false" />
+	<style name="radar_explore_style" fillalpha="0.6" fillcolor="0x4CE64E" linewidth="1.0" linecolor="0x4CE64E" enabled="false" />
+	<style name="minimap_container_style" visible="false" />
+
+	<style name="minimap_clipped_style" align="center" onclick="" handcursor="false" /><!--THIS EMPTY STRING IS A GOOD THING!!! It inherits from the upper style-->
+	<style name="clicker" type="text" align="center" width="0" height="0" bgcolor="0x000000" bgalpha="1" enabled="false" visible="false" keep="false"/>
+
+
+	<!-- MINIMAP -->
+		<!-- <hotspot name="map_grid" style="map_grid" />
+	<layer name="minimap_container" style="minimap_container_style" visible="true">
+		<layer name="clicker" style="clicker" />
+		<layer name="minimap_clipped" style="minimap_clipped_style" scale=".5" />
+		<layer name="mini_map_spot" style="mapspot" />
+	</layer> -->
+
+
+	<!-- MINIMAP OVERRIDE -->
+	<hotspot if="device.mobile"  name="map_grid" style="map_grid" />
+	<layer if="device.mobile"  name="minimap_container" style="minimap_container_style" visible="false">
+		<layer name="minimap_clipped" style="minimap_clipped_style" scale=".5" />
+		<layer name="mini_map_spot" style="mapspot" />
+	</layer>
+	<action if="device.mobile"  name="load_map" />
+	<action if="device.mobile"  name="offset_radar" />
+	<action if="device.mobile"  name="update_minimap_grid" />
+	<layer if="device.mobile"  name="map_graphic" keep="true" visible="true" enabled="true" align="bottomleft" x="171" y="171"  type="text" capture="false" /> 
+
+    <action name="tween_but_up">
+        <!-- set(layer[tour_control_bg].bgcolor, '0x00ff00'); -->
+			<!-- layer[tour_control_bg].loadstyle(play_on); -->
+        tween(layer[tour_control_bg].alpha, 1, .4, easeinquad, tween_but_down());
+    </action>
+    <action name="tween_but_down">
+        tween(layer[tour_control_bg].alpha, 0, .25, easeoutquad, tween_but_up());
+    </action>
+    <action name="stop_but_tween">
+        stoptween(layer[tour_control_bg].alpha);
+        set(layer[tour_control_bg].alpha, 0);
+        <!-- set(layer[tour_control_bg].bgcolor, '0x00FF00'); -->
+				<!-- layer[tour_control_bg].loadstyle(play_off); -->
+    </action>
+
+	<!-- 
+
+		FIND METHODS
+		Tour specific
+
+	 -->
+	<action name="find_item" args="item,con" scope="local">
+		<!-- tween(view.fov,120,1); -->
+		gyro_off();
+		set(events.onblendcomplete, shoosh_finished);
+		search_for_item(get(scene_name), get(item), get(con));
+		plugin[tour].set_query(get(item));
+		shoosh_callback(get(scene_name));
+	</action>
+
+	<action name="find_item_teleport" args="item" scope="local">
+		gyro_off();
+		search_for_item_teleport(get(scene_name), get(item));
+		plugin[tour].set_query(get(item));
+		set(fov, get(view.fov));
+		if(hotspot[get(item)].fov != null , set(fov, get(hotspot[get(item)].fov)) );
+		if(get(item) != null, looktohotspot(get(item),get(fov)));
+		plugin[scene].get_path_local(get(scene_name));
+		init_scene();
+
+	</action>
+
+	<action name="find_item_teleport_constrain" args="item" scope="local">
+		gyro_off();
+		search_for_item_teleport(get(scene_name), get(item), true);
+		plugin[tour].set_query(get(item));
+		set(fov, get(view.fov));
+		if(hotspot[get(item)].fov != null , set(fov, get(hotspot[get(item)].fov)) );
+		if(get(item) != null, looktohotspot(get(item),get(fov)));
+		plugin[scene].get_path_local(get(scene_name));
+		init_scene();
+		<!-- plugin[scene].update_current_map(get(scene_name)); -->
+		
+	</action>
+
+	<action name="finish_shoosh" args="item" scope="local">
+		<!-- gyro_off(); -->
+		set(events.onblendcomplete, blend_finished);
+		set(fov, get(view.fov));
+		if(hotspot[get(item)].fov != null , set(fov, get(hotspot[get(item)].fov)) );
+		if(get(item) != null
+			,
+			looktohotspot(get(item),get(fov));
+		);
+		plugin[scene].update_floor_map(get(scene_name));
+		
+		init_scene();
+	</action>
+
+	<!-- the first scene in tour mode -->
+	<action name="mode_startup">
+	
+		callwhen(plugin[tour].loaded, plugin[tour].start_tour(get(global.tour_mode)); );
+		if(get(global.isMobile)
+		set(layer[minimap_container].visible, false);
+		);
+        gyro_off();
+		<!-- delayedcall(.5, set(layer[minimap_container].visible, true)); -->
+	</action>
+
+	<!-- init function -->
+	<action name="init_scene" scope="local">
+        plugin[scene].init_scene_tour();
+        update_floor();
+		plugin[tour].show_query();
+		plugin[scene].update_current_map(get(scene_name));
+	</action>
+
+	<action name="update_floor" scope="local">
+		set(cs, get(scene[get(scene_name)]));
+		set(layer[floor_text].html, calc('Floor ' + get(cs.floor_id)));
+		<!-- update_minimap_grid(0); -->
+	</action>
+
+	<!-- make the floorspots -->
+	<action name="make_floorspot" scope="local" args="ox,oz,oy,name,chi,a">
+
+		addhotspot(get(name), hs);
+		hs.loadstyle(floorspot);
+		set(hs.tx, get(ox));
+		set(hs.tz, get(oz));
+		calc(hs.ty, calc(number(get(oy))+number(get(floor_height))));
+		set(hs.linkedscene, get(name));
+
+	</action>
+
+	<!-- this is unused -->
+	<!-- <action name="perform_tour_query" scope="local">
+		plugin[tour].set_query(get(caller.name));
+		find_item(get(caller.query));
+	</action> -->
+
+		<!-- setup first scene  -->
+	<events name="tourevents" keep="true" onxmlcomplete="setup_first_scene" />
+	<action name="setup_first_scene">
+		<!-- set(view, tx=0, ty=0, tz=0, fovmax=140, fovmin=40, fov=120); -->
+		set(view, tx=0, ty=0, tz=0);
+		set(events[tourevents].onxmlcomplete, null);
+		set(events[tourevents].onloadcomplete, tween(view.tx|view.ty|view.tz, '0|0|0', 1, easeinoutquad);
+		<!-- set(events[tourevents].onloadcomplete, tween(view.ox|view.oy|view.oz, '0|0|0', 1, easeinoutquad); -->
+		<!-- set(events[tourevents].onloadcomplete, tween(view.tx|view.ty|view.tz, '0|0|0', 1, linear); -->
+
+		);
+	</action>
+
+	<!-- function overwrites -->
+	<action name="street_sign" args="name,ath" scope="local"></action>
+	<action name="make_vert_nav" scope="local" args="ox,oz,oy,name">
+		<!-- dont make a floorspot its not needed here -->
+        set(cs, get(scene[get(scene_name)]));
+        set(sc, get(plugin[scene]));
+        sc.set_elevations(get(cs.floor_id),get(scene[get(name)].floor_id));
+        <!-- set a new y for use in tranision in next_scene function -->
+        set(cs.y, calc(sc.current_elev-sc.next_elev));
+        set(global.ay, calc(sc.current_elev-sc.next_elev));
+
+	</action>
+
+<action name="next_scene" args="curr_scene,a,ss" scope="local">
+
+
+		
+		gyro_off();
+		<!-- get elevations -->
+		set(s1, get(scene[get(scene_name)]));
+		set(sc, get(plugin[scene]));
+
+		<!-- hide nadir -->
+		set(hotspot[nadir_spot].visible, false);
+		hide_hotspots();
+
+		if (get(curr_scene) == null
+		,
+		copy(ls, caller.linkedscene);
+		tolower(ls);
+		set(global.scene_name, get(ls));
+		,
+		set(global.scene_name, get(curr_scene));
+		);
+
+		<!-- elev -->
+		set(s2, get(scene[get(scene_name)]));
+		sc.set_elevations(get(s1.floor_id),get(s2.floor_id));
+        set(elev, calc(sc.current_elev-sc.next_elev));
+
+
+		set(hs, get(hotspot[get(scene_name)]));
+		set(global.ntx, get(hs.tx));
+		set(global.ntz, get(hs.tz));
+		set(global.nty, calc(get(hs.ty)-number(get(floor_height))));
+
+
+		calc(x, number(get(global.current_x)) + number(get(ntx)));
+		calc(z, number(get(global.current_z)) + number(get(ntz)));
+		calc(y, number(get(global.current_y)) + number(get(nty)));
+		
+		set(global.current_x, get(x));
+		set(global.current_z, get(z));
+		set(global.current_y, get(y));
+		
+		<!-- update gloabl position -->
+		update_path_history(get(ntx), get(ntz), get(nty));
+
+		set(image.ox, calc(get(ntx)*-1));
+		set(image.oz, calc(get(ntz)*-1));
+		set(image.oy, calc(elev*-1));
+		set(view.tx, calc(get(ntx)*-1));
+		set(view.tz, calc(get(ntz)*-1));
+		set(view.ty, calc(elev*-1));
+
+		<!-- get the angle for the next scene -->
+		<!-- set(hs, get(hotspot[get(scene_name)])); -->
+		spacetosphere(hs.tx,hs.ty,hs.tz, h,v,depth);
+		<!-- txtadd(arch, get(scene_name), '_arch'); -->
+		<!-- set(hs, get(hotspot[get(arch)])); -->
+
+		<!-- stop stuff time to move on -->
+		stoptween(view.tx,view.ty,view.tz);
+		<!-- stoplookto(); -->
+		<!-- getlooktodistance(result, get(hs.ath), 0); -->
+		if (get(s1.bridge) EQ 'true'
+		,
+
+			if (get(s2.bridge) EQ 'true'
+			,
+			<!-- updateobject(true, true); -->
+			<!-- updatescreen(); -->
+			delayedcall(.1,
+			loadscene(get(scene_name), null, MERGE|KEEPVIEW, BLEND(1, linear));
+			update_minimap_grid(0);
+
+			);
+			,
+			lookto(get(h), 0, get(view.fov), smooth(), true, false);
+			loadscene(get(scene_name), null, MERGE|KEEPVIEW, BLEND(1, linear));
+			update_minimap_grid(1);
+
+			);
+
+		,
+			lookto(get(h), 0, get(view.fov), smooth(), true, false);
+			loadscene(get(scene_name), null, MERGE|KEEPVIEW, BLEND(1, linear));
+			trace(speed)
+			update_minimap_grid(1);
+
+		);
+
+		
+		set(global.angle, null);
+
+
+	</action>
+
+
+
+</krpano>

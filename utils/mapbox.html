@@ -1,0 +1,76 @@
+<html>
+
+<head>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v2.1.1/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v2.1.1/mapbox-gl.css' rel='stylesheet' />
+</head>
+
+<body>
+    <script src="https://unpkg.com/es6-promise@4.2.4/dist/es6-promise.auto.min.js"></script>
+    <script src="https://unpkg.com/@mapbox/mapbox-sdk/umd/mapbox-sdk.min.js"></script>
+    <div id='map' style='width: 100%; height: 350px'></div>
+    <style>
+        body {
+            padding:0;
+            margin:0;
+            background-color: rgb(53, 53, 53);
+        }
+    </style>
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoiY2xhcmtlbSIsImEiOiJja2wxOXJmNTMwMTJ0MzF0aG1oaGFudmU4In0.rnDt71A6kpx_DENwEpyKlw';
+        // var map = new mapboxgl.Map({
+        //     container: 'map', // container ID
+        //     style: 'mapbox://styles/mapbox/streets-v11', // style URL
+        //     center: [-122.676483, 45.523064], // starting position [lng, lat]
+        //     zoom: 9 // starting zoom
+        // });
+        var mapboxClient = mapboxSdk({ accessToken: mapboxgl.accessToken });
+        mapboxClient.geocoding
+            .forwardGeocode({
+                query: 'Wellington, New Zealand',
+                autocomplete: false,
+                limit: 1
+            })
+            .send()
+            .then(function (response) {
+                if (
+                    response &&
+                    response.body &&
+                    response.body.features &&
+                    response.body.features.length
+                ) {
+                    var feature = response.body.features[0];
+
+                    var map = new mapboxgl.Map({
+                        container: 'map',
+                        //style: 'mapbox://styles/mapbox/streets-v11',
+                        style: 'mapbox://styles/clarkem/ckl1ejb2u0dz918qnt1cuel6k',
+                        center: [-97.185313, 38.273868],
+                        zoom: 2
+                    });
+                    new mapboxgl.Marker().setLngLat([-122.65989515338335, 45.52389722667217]).addTo(map);
+                    new mapboxgl.Marker().setLngLat([-87.62146526758852, 41.86674151482322]).addTo(map);
+                    new mapboxgl.Marker().setLngLat([-87.69094843622155, 41.864780428419365]).addTo(map);
+                    new mapboxgl.Marker().setLngLat([-71.0429634088997, 42.35245017888467]).addTo(map);
+                    new mapboxgl.Marker().setLngLat([-118.41390738393561, 34.0612300036115]).addTo(map);
+                    new mapboxgl.Marker().setLngLat([-122.39943093376603, 37.789109804244795]).addTo(map);
+                    new mapboxgl.Marker().setLngLat([-122.33799160886446, 47.60813262673151]).addTo(map);
+                    new mapboxgl.Marker().setLngLat([-122.334566793451, 47.617665306441914]).addTo(map);
+                    new mapboxgl.Marker().setLngLat([-73.95440833742083, 40.769474576986084]).addTo(map); // sothebys
+                }
+            });
+    </script>
+
+
+
+
+
+
+
+
+
+</body>
+
+</html>
+
+

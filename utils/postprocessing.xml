@@ -1,0 +1,327 @@
+<krpano>
+
+	<!-- include some helpers:
+		 - a context menu with different projections
+		 - a style for doubleclick events
+		 - a iphone fullscreen-mode info
+	-->
+	<include url="../../app/plugins/contextmenu.xml" />
+	<include url="../../app/plugins/doubleclick_style.xml" />
+	<include url="../../app/plugins/iphone_fullscreen_swipe.xml" />
+	
+
+
+	<!-- the postprocessing plugins -->
+
+	<plugin name="pp_light" keep="true"
+		url="../../app/plugins/pp_light.js"
+		enabled="true"
+		exposure="0.0"
+		lights="0.0"
+		shadows="0.0"
+		filterrange="60.0"
+		masking="1.0"
+		order="1"
+		phase="1"
+		/>
+
+	<plugin name="pp_sharpen" keep="true"
+		url="../../app/plugins/pp_sharpen.js"
+		enabled="true"
+		strength="0.0"
+		range="1.5"
+		luminanceonly="true"
+		order="2"
+		phase="1"
+		/>
+
+	<plugin name="pp_blur" keep="true"
+		url="../../app/plugins/pp_blur.js"
+		enabled="true"
+		range="0.0"
+		linearrgb="false"
+		mirroredges="true"
+		order="3"
+		phase="1"
+		/>
+
+
+
+	<!-- use a dynamic different layout for portrait orientation screens (e.g. mobile devices) -->
+
+	<events name="pp_demo" keep="true" onresize="pp_demo_resize();" />
+
+	<action name="pp_demo_resize">
+		if(stagewidth LT stageheight,
+			<!-- portrait -->
+			set(area.height, 70%);
+			set(layer[pp_demo_container], parent=STAGE, align=bottom, width=100%, height=30%, x=0);
+			set(layer[pp_demo_scrollarea].parentmaskchildren, true);
+			set(layer[pp_demo_scrollarea].align,top);
+			set(layer[pp_demo_background].visible,true);
+			tween(layer[pp_demo_showhide_button].rotate,0,0);
+		  ,
+			<!-- landscape -->
+			set(area.height, 100%);
+			set(layer[pp_demo_container], parent=null, align=righttop, width=220, height=100%);
+			set(layer[pp_demo_scrollarea].parentmaskchildren, false);
+			set(layer[pp_demo_scrollarea].align,center);
+			set(layer[pp_demo_background].visible,false);
+		);
+	</action>
+
+
+	<!-- layout -->
+
+
+	<layer name="pp_demo_container" keep="true" type="container" align="righttop" width="220" height="100%" x="0">
+
+		<layer name="pp_demo_showhide_button" type="text" align="left" edge="center" x="-12"
+			html="►" css="color:#FFFFFF;font-size:20px;" txtshadow="0 0 2 0x000000 1.0" bg="false" alpha="0.5"
+			onclick="if(layer[pp_demo_container].x == 0,
+						tween(layer[pp_demo_container].x, calc(-layer[pp_demo_container].width) );
+						tween(layer[pp_demo_showhide_button].rotate, 180);
+					  ,
+						tween(layer[pp_demo_container].x, 0);
+						tween(layer[pp_demo_showhide_button].rotate, 0);
+					);"
+			/>
+
+		<layer name="pp_demo_scrollarea"
+			url="../../app/plugins/scrollarea.js"
+			align="center"
+			direction="v"
+			capturechildren="false"
+			parentmaskchildren="false"
+			width="100%"
+			height="calc:7+15+10+213+10+93+10+123+10+30+7"
+		>
+
+			<layer name="pp_demo_background" zorder="0" type="container" bgcolor="0x777777" bgalpha="0.5" bgcapture="true"  align="righttop" width="100%" height="200%" capture="false" />
+			<layer name="pp_demo_infotext1" type="text" align="top" y="7" html="Postprocessing" css="color:#FFFFFF;" bg="false" capture="false" txtshadow="0 1 2 0x000000 1.0" />
+			<!-- <layer name="pp_demo_infotext2" type="text" align="bottom" y="9" html="[ul style='margin:0;padding-left:10px;'][li]click and drag the settings[/li][li]double click to reset[/li][/ul]" css="color:#FFFFFF;" bg="false" capture="false" padding="0" txtshadow="0 1 2 0x000000 1.0" /> -->
+
+
+			<layer name="pp_light_control" type="container" bgcapture="true" capture="false"
+				width="200" height="213" align="top" x="0" y="calc:7+15+10"
+				bgalpha="1.0" bgcolor="0xFFFFFF" bgborder="0 0x00000 0.7" bgroundedge="1" bgshadow="0 1 4 0x000000 1.0"
+			>
+
+				<layer name="pplc_check" style="pp_checkbox" ppplugin="pp_light" />
+				<layer name="pplc_info" style="pp_text" html="Light Postprocessing" align="top" y="8" x="8" capture="false" />
+
+				<layer name="pplc_exposure" ppplugin="pp_light" style="pp_button|pp_valuecontrol" align="top" x="0" y="32" width="180"
+					varstep="0.1"
+					vardragrange="4.0"
+					getvar="copy(var, plugin[pp_light].exposure);"
+					setvar="copy(plugin[pp_light].exposure, var); getvar(); calc(html,'Exposure: ' + (var GT 0 ? '+' : '') + roundval(var,2));"
+					/>
+
+				<layer name="pplc_lights" ppplugin="pp_light" style="pp_button|pp_valuecontrol" align="top" x="0" y="62" width="180"
+					varstep="0.1"
+					vardragrange="4.0"
+					getvar="copy(var, plugin[pp_light].lights);"
+					setvar="copy(plugin[pp_light].lights, var); getvar(); calc(html,'Lights: ' + (var GT 0 ? '+' : '') + roundval(var,2));"
+					/>
+
+				<layer name="pplc_shadows" ppplugin="pp_light" style="pp_button|pp_valuecontrol" align="top" x="0" y="92" width="180"
+					varstep="0.1"
+					vardragrange="4.0"
+					getvar="copy(var, plugin[pp_light].shadows);"
+					setvar="copy(plugin[pp_light].shadows, var); getvar(); calc(html,'Shadows: ' + (var GT 0 ? '+' : '') + roundval(var,2));"
+					/>
+
+				<layer name="pplc_range" ppplugin="pp_light" style="pp_button|pp_valuecontrol" align="top" x="0" y="122" width="180"
+					varstep="5"
+					vardragrange="100.0"
+					getvar="copy(var, plugin[pp_light].filterrange);"
+					setvar="copy(plugin[pp_light].filterrange, var); getvar(); calc(html,'Filterrange: ' + roundval(var,1));"
+					/>
+				
+				<layer name="pplc_masking" ppplugin="pp_light" style="pp_button|pp_valuecontrol" align="top" x="0" y="152" width="180"
+					varstep="0.1"
+					vardragrange="2.0"
+					getvar="copy(var, plugin[pp_light].masking);"
+					setvar="copy(plugin[pp_light].masking, var); getvar(); calc(html,'Masking: ' + roundval(var,1));"
+					/>
+
+				<layer name="pplc_quality" ppplugin="pp_light" style="pp_button|pp_valuecontrol" align="top" x="0" y="182" width="180"
+					varstep="1"
+					vardragrange="0"
+					getvar="copy(var, plugin[pp_light].quality);"
+					setvar="copy(plugin[pp_light].quality, var); getvar(); calc(html,'Quality: ' + roundval(var,0));"
+					/>
+
+			</layer><!-- pp_light_control -->
+
+
+			<layer name="pp_sharpen_control" type="container" bgcapture="true" capture="false"
+				width="200" height="123" align="top" x="0" y="calc:7+15+10+213+10"
+				bgalpha="1.0" bgcolor="0xFFFFFF" bgborder="0 0x00000 0.7" bgroundedge="1" bgshadow="0 1 4 0x000000 1.0"
+			>
+
+				<layer name="ppsc_check" style="pp_checkbox" ppplugin="pp_sharpen" />
+				<layer name="ppsc_info" style="pp_text" html="Sharpen Postprocessing" align="top" y="8" x="8" capture="false" />
+
+				<layer name="ppsc_strength" ppplugin="pp_sharpen" style="pp_button|pp_valuecontrol" align="top" x="0" y="32" width="180"
+					varstep="0.1"
+					vardragrange="5.0"
+					getvar="copy(var, plugin[pp_sharpen].strength);"
+					setvar="copy(plugin[pp_sharpen].strength, var); getvar(); calc(html,'Strength: ' + roundval(var,2));"
+					/>
+
+				<layer name="ppsc_range" ppplugin="pp_sharpen" style="pp_button|pp_valuecontrol" align="top" x="0" y="62" width="180"
+					varstep="1"
+					vardragrange="200.0"
+					getvar="copy(var, plugin[pp_sharpen].range);"
+					setvar="copy(plugin[pp_sharpen].range, var); getvar(); calc(html,'Range: ' + roundval(var,1));"
+					/>
+
+				<layer name="ppsc_quality" ppplugin="pp_sharpen" style="pp_button|pp_valuecontrol" align="top" x="0" y="92" width="180"
+					varstep="1"
+					vardragrange="0"
+					getvar="copy(var, plugin[pp_sharpen].quality);"
+					setvar="copy(plugin[pp_sharpen].quality, var); getvar(); calc(html,'Quality: ' + roundval(var,0));"
+					/>
+
+			</layer><!-- pp_sharpen_control -->
+
+
+			<layer name="pp_blur_control" type="container" bgcapture="true" capture="false"
+				width="200" height="93" align="top" x="0" y="calc:7+15+10+213+10+123+10"
+				bgalpha="1.0" bgcolor="0xFFFFFF" bgborder="0 0x00000 0.7" bgroundedge="1" bgshadow="0 1 4 0x000000 1.0"
+			>
+
+				<layer name="ppbc_check" style="pp_checkbox" ppplugin="pp_blur" />
+				<layer name="ppbc_info" style="pp_text" html="Blur Postprocessing" align="top" y="8" x="8" capture="false" />
+
+				<layer name="ppbc_range" ppplugin="pp_blur" style="pp_button|pp_valuecontrol" align="top" x="0" y="32" width="180"
+					varstep="5"
+					vardragrange="100.0"
+					getvar="copy(var, plugin[pp_blur].range);"
+					setvar="copy(plugin[pp_blur].range, var); getvar(); calc(html,'Range: ' + roundval(var,1));"
+					/>
+
+				<layer name="ppbc_quality" ppplugin="pp_blur" style="pp_button|pp_valuecontrol" align="top" x="0" y="62" width="180"
+					varstep="1"
+					vardragrange="0"
+					getvar="copy(var, plugin[pp_blur].quality);"
+					setvar="copy(plugin[pp_blur].quality, var); getvar(); calc(html,'Quality: ' + roundval(var,0));"
+					/>
+
+			</layer><!-- pp_blur_control -->
+
+		</layer><!-- pp_demo_scrollarea -->
+
+	</layer><!-- pp_demo_container -->
+
+
+
+	<!-- styles / actions -->
+
+	<style name="pp_text"
+	       type="text"
+	       css="color:#000000;"
+	       bg="false"
+	       />
+
+	<style name="pp_button"
+	       type="text"
+	       css="text-align:center;"
+	       height="22"
+	       padding="4 8"
+	       bgborder="1 0x000000 0.12"
+	       bgroundedge="1"
+	       bgcolor="0xFFFFFF"
+	       ondown.addevent="set(bgcolor,0xDDDDDD);"
+	       onup.addevent="if(!hovering,set(bgcolor,0xFFFFFF),set(bgcolor,0xEEEEEE));"
+	       onover.addevent="if(!pressed,set(bgcolor,0xEEEEEE));"
+	       onout.addevent="if(!pressed,set(bgcolor,0xFFFFFF));"
+	       />
+
+	<style name="pp_valuecontrol" style="doubleclick"
+	       default=""
+	       ondown.addevent="pp_valuecontrol_ondown();"
+	       onloaded.addevent="callwhen(plugin[get(ppplugin)].loaded == true, getvar(); copy(default,var); setvar(); pp_valuecontrol_add_incdec_buttons(); );"
+	       ondoubleclick="copy(var,default); setvar();"
+	       />
+
+	<style name="pp_checkbox"
+	       type="container" align="lefttop" width="35" height="30" zorder="2" children="false" bgcapture="true" xxbgborder="1 0xFF0000"
+	       onloaded="pp_checkbox_init();"
+	       onclick="switch(plugin[get(ppplugin)].enabled); onloaded();"
+	       />
+
+	<action name="pp_checkbox_init" scope="localonly">
+		addlayer(calc(caller.name + '_border'), layer1);
+		addlayer(calc(caller.name + '_fill'), layer2);
+		set(layer1, parent=get(caller.name), keep=get(caller.keep), type=container, zorder=1, align=lefttop, x=10, y=10, width=14, height=14, bgborder='1 0x000000 0.12', bgroundedge=1);
+		set(layer2, parent=get(caller.name), keep=get(caller.keep), type=container, zorder=2, align=lefttop, x=11, y=11, width=12, heighT=12, bgcolor=0x000000, bgalpha=0.24);
+		callwhen(global.plugin[get(caller.ppplugin)].loaded == true,
+			tween(layer2.bgalpha|global.layer[get(caller.parent)].alpha, calc(global.plugin[get(caller.ppplugin)].enabled ? '0.24|1.0' : '0.05|0.7'), 0.15);
+		);
+	</action>
+
+
+	<!-- an action for add increase/decrease buttons on the value control -->
+	<action name="pp_valuecontrol_add_incdec_buttons" scope="localonly">
+		addlayer(calc(caller.name + '_inc'), layer_inc);
+		addlayer(calc(caller.name + '_dec'), layer_dec);
+		layer_inc.loadstyle(pp_button);
+		layer_dec.loadstyle(pp_button);
+		set(layer_inc, parent=get(caller.name), keep=get(caller.keep), align=right, html='+', ondown='set(stepdir,+1); pp_valuecontrol_incdec_ondown();');
+		set(layer_dec, parent=get(caller.name), keep=get(caller.keep), align=left,  html='-', ondown='set(stepdir,-1); pp_valuecontrol_incdec_ondown();');
+	</action>
+
+
+	<!-- an action for increasing or decreasing the button values -->
+	<action name="pp_valuecontrol_incdec_ondown">
+		copy(t1,timertick);
+		asyncloop(pressed,
+			calc(dt,timertick - t1);
+			if(dt GT 500,
+				callwith(calc('layer['+parent+']'),
+					calc(dt,timertick - t1);
+					calc(stepscale, dt GT 2000 ? (dt / 1000) : 1.0);
+					getvar();
+					calc(var, var + stepdir * stepscale * varstep / display.currentfps);
+					setvar();
+				);
+			);
+		  ,
+			calc(dt,timertick - t1);
+			if(dt LT 500,
+				callwith(calc('layer['+parent+']'),
+					getvar();
+					calc(var, (var + stepdir * varstep) / varstep);
+					Math.round(var);
+					calc(var, var * varstep);
+					setvar();
+				);
+			);
+		);
+	</action>
+
+
+	<!-- an action for changing the button value by dragging/moving the mouse around -->
+	<action name="pp_valuecontrol_ondown">
+		if(vardragrange GT 0,
+			copy(startx, mouse.stagex);
+			copy(starty, mouse.stagey);
+			getvar();
+			copy(startv, var);
+			asyncloop(pressed,
+				calc(dx, (mouse.stagex - startx) / pixelwidth );
+				calc(dy, (mouse.stagey - starty) / pixelwidth );
+				if(dx*dx GT dy*dy,
+					calc(var,startv + dx * vardragrange);
+				  ,
+					calc(var,startv + dy * vardragrange);
+				);
+				setvar();
+			  );
+		);
+	</action>
+
+
+</krpano>

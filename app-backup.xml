@@ -1,0 +1,566 @@
+﻿<krpano version="1.20.6" strict="true" shoosh_fov="120" >
+
+	<!-- set ios? -->
+	<!-- <set var="device.ios" val="global.is_ios" /> -->
+
+	<!-- gyro -->
+	<action name="gyro_available_info">
+		trace("Gyro available");
+	</action>
+
+	<action name="gyro_not_available_info" xautorun.flash="onstart">
+		trace("Gyro not available");
+	</action>
+
+	<action name="gyro_on">
+		set(plugin[gyro].enabled, true);
+	</action>
+
+	<action name="gyro_off">
+		set(plugin[gyro].enabled, false);
+	</action>
+
+	<!-- must have to work with .htaccess password -->
+	<security cors="use-credentials" />
+
+	<action name="set_session" scope="local" type="Javascript"><![CDATA[
+		sessionStorage.setItem(args[1],args[2]);
+	]]>	</action>
+
+	<!-- <action name="open_floor_menu" scope="local">
+		set(sc, get(plugin[scene]));
+		sc.floor_menu();
+	</action> -->
+	
+	<!-- 
+		
+		init function 
+		autorun="onstart"
+		
+	-->
+	<action name="startup">
+
+		set(sf, get(startfloor));
+		if (get(startfloor) != null
+		,
+			<!-- TODO REMOVE THIS -->
+		,
+			if(startscene === null OR !scene[get(startscene)], copy(startscene,scene[0].name));
+			set(startfloor, get(scene[get(startscene)].floor_id));
+			
+		);
+
+		if(startactions !== null, startactions());
+        set(global.scene_name, get(scene[get(startscene)].name));
+		plugin[scene].generate_global_positions(get(scene_name));
+		make_sym_links();
+		<!-- set(view.fov, 120); -->
+
+		<!-- Loadscene and CHECK FOR A SEARCH item -->
+        addhotspot('nadir_spot', ns);
+		ns.loadstyle(nadir_spot);
+		mode_startup();
+
+	</action>
+
+	<view fovmax="140" fovmin="40" fov="120" />
+	<!-- <view fovmax="360" fovmin="0" fov="120" /> -->
+
+	<!-- global skin settings -->
+	<skin_settings deeplinking="true" gyro="true" gyro_keeplookingdirection="true" loadingtext="loading..." />
+	<!-- <skin_settings gyro="true" gyro_keeplookingdirection="true" loadingtext="loading..." /> -->
+	<action name="skin_deeplinking_update_url" scope="local" args="delay">
+		if(skin_settings.deeplinking AND (!webvr OR webvr.isenabled === false) AND global.lpinfo === null,
+			delayedcall(skin_deeplinking_update, calc(delay == null ? 0.1 : delay), skin_deeplinking_update_url_process() );
+		);
+	</action>
+
+	<action name="skin_deeplinking_update_url_process" scope="local">
+		copy(adr, browser.location);
+		indexoftxt(qi, get(adr), '?');
+		if(qi GT 0, subtxt(adr, adr, 0, get(qi)));
+		copy(si, scene[get(xml.scene)].index);
+		set(adr, calc(adr + '?startscene=' + si));
+		js( history.replaceState(null, document.title, get(adr)); );
+	</action>
+
+	<!-- <events name="skin_events" onnewpano="skin_deeplinking_update_url();" /> -->
+	<events name="skin_events" keep="true" onnewpano="skin_deeplinking_update_url();" />
+
+	<!-- some performance tweaking -->
+	<!--  depthbuffer="true" -->
+	<display framebufferscale="1" surfacesubdiv="50" loadwhilemoving="true" />
+	<!-- iPhone X safe-area support: use the horizontal safe-area only -->
+	<display devices="ios" safearea="h-only" />
+
+	<!-- A helper script for getting into fullscreen mode on the iPhone. -->
+	<events name="iphone_fullscreen_swipe" keep="true" devices="iphone" oniphonefullscreen="iphone_fullscreen_swipe();" />
+
+	<action name="iphone_fullscreen_swipe" scope="localonly">
+		if(global.display.iphonefullscreen GT 0,
+			if(!global.layer[iphone_fullscreen_info],
+				addlayer('iphone_fullscreen_info', infolayer);
+				set(infolayer, type=text, css='color:#FFFFFF; font-size:26px; font-weight:bold; text-align:center;', txtshadow='0 0 8 0x000000 1', mergedalpha=false, bgcolor=0x000000, bgalpha=0.7, bgcapture=true, align=lefttop, x=0, y=0, width=100%, height=100%, vcenter=true, keep=true, zorder=9999, safearea=false);
+				if(global.display.iphonefullscreen == 1,
+					set(infolayer.html, '[span style="font-size:60px;"]⇡[/span][br]Swipe Up');
+				  ,
+					set(infolayer.html, '[span style="font-size:60px;"]⇣ ⇡[/span][br]Swipe Down and Up');
+				);
+			);
+		  ,
+			removelayer('iphone_fullscreen_info');
+		);
+	</action>
+
+	<!-- mouse / touch / keyboard(button) control settings - https://krpano.com/docu/xml/#control -->
+	<!-- <control mouse="follow" touch="drag" zoomtocursor="false" zoomoutcursor="false" draginertia="0.1" dragfriction="0.9" movetoaccelerate=".5" movetospeed="10.0" movetofriction="0.8" keybaccelerate=".1" keybfriction="0.94" keybfovchange="0.25" mousefovchange="1.0" fovspeed="3.0" fovfriction="0.9" bouncinglimits="true" touchzoom="true" /> -->
+	<!-- mouse cursors - https://krpano.com/docu/xml/#cursors -->
+	<cursors standard="default" dragging="move" moving="move" />
+
+	<!-- ensure stagescale 2x for mobile devices (regardless if mobilescale is 0.5 or 1.0) -->
+	<krpano stagescale="calc:stagescale * 2" if="stagescale LT 1.0" devices="mobile" />
+
+	<action name="send_accomp" type="Javascript"><![CDATA[
+		
+		sendAccomp(args[1]);
+		
+	]]>	</action>
+
+	<!-- next scene functions -->
+	<action name="next_vert_scene" args="curr_scene,a,ss" scope="local">
+		trace ("next vert scene");
+		<!-- hide nadir -->
+		hide_hotspots();
+
+		if (get(curr_scene) == null
+		,
+		copy(ls, caller.linkedscene);
+		tolower(ls);
+		set(global.scene_name, get(ls));
+		,
+		set(global.scene_name, get(curr_scene));
+		);
+
+		plugin[scene].update_floor_map(get(scene_name));
+		<!-- make_sym_links(); -->
+
+		<!-- plugin[scene].generate_global_positions(get(scene_name)); -->
+
+		<!-- delayedcall(2, -->
+		set(global.ntx, get(hotspot[get(scene_name)].tx));
+		set(global.ntz, get(hotspot[get(scene_name)].tz));
+		set(global.nty, calc(get(hotspot[get(scene_name)].ty)-number(get(floor_height))));
+
+
+		calc(x, number(get(global.current_x)) + number(get(ntx)));
+		calc(z, number(get(global.current_z)) + number(get(ntz)));
+		calc(y, number(get(global.current_y)) + number(get(nty)));
+		
+		<!-- THESE VALUES HAVE TO BE RECALCED WHEN FLOOR (DOMAIN) CHANGES -->
+		set(global.current_x, get(x));
+		set(global.current_z, get(z));
+		set(global.current_y, get(y));
+
+		stoptween(view.tx,view.ty,view.tz);
+				<!-- update gloabl position -->
+		update_path_history(get(ntx), get(ntz), get(nty));
+		set(view.tx, 0);
+		set(view.tz, 0);
+		set(view.ty, calc(caller.y*-1));
+
+				<!-- set global anngle -->
+		<!-- dist(d,get(ntx),get(ntz),0,0); -->
+
+
+		<!-- if (get(a) != null
+		,
+			if (get(ss) != null
+			,
+				set(view.vlookat, 0);
+				lookto(get(ss),0,get(view.fov),tween(easeoutquart,.5),true,true);			
+			);	
+			set(global.angle, get(a));
+		,
+			set(global.angle, null);
+		); -->
+		tween(view.fov, get(shoosh_fov), .5);
+		loadscene(get(scene_name), null, MERGE|KEEPVIEW, BLEND(1, "linear"));
+
+		<!-- preload_local(get(scene_name)); -->
+
+		<!-- get the new floor -->
+		<!-- set(sc, get(plugin[scene])); -->
+		<!-- plugin[scene].change_floor(get(scene[get(caller.linkedscene)].floor_id)); -->
+		<!-- ); -->
+
+	</action>
+
+	<action name="next_scene" args="curr_scene,a,ss" scope="local">
+
+		gyro_off();
+		<!-- get elevations -->
+		set(s1, get(scene[get(scene_name)]));
+		set(sc, get(plugin[scene]));
+
+		<!-- hide nadir -->
+		set(hotspot[nadir_spot].visible, false);
+		hide_hotspots();
+
+		if (get(curr_scene) == null
+		,
+		copy(ls, caller.linkedscene);
+		tolower(ls);
+		set(global.scene_name, get(ls));
+		,
+		set(global.scene_name, get(curr_scene));
+		);
+
+		<!-- elev -->
+		set(s2, get(scene[get(scene_name)]));
+		sc.set_elevations(get(s1.floor_id),get(s2.floor_id));
+        set(elev, calc(sc.current_elev-sc.next_elev));
+
+
+		set(hs, get(hotspot[get(scene_name)]));
+		set(global.ntx, get(hs.tx));
+		set(global.ntz, get(hs.tz));
+		set(global.nty, calc(get(hs.ty)-number(get(floor_height))));
+
+
+		calc(x, number(get(global.current_x)) + number(get(ntx)));
+		calc(z, number(get(global.current_z)) + number(get(ntz)));
+		calc(y, number(get(global.current_y)) + number(get(nty)));
+		
+		set(global.current_x, get(x));
+		set(global.current_z, get(z));
+		set(global.current_y, get(y));
+		
+		<!-- update gloabl position -->
+		update_path_history(get(ntx), get(ntz), get(nty));
+
+		set(view.tx, calc(get(ntx)*-1));
+		set(view.tz, calc(get(ntz)*-1));
+		set(view.ty, calc(elev*-1));
+		set(image.ox, calc(get(ntx)*-1));
+		set(image.oz, calc(get(ntz)*-1));
+		set(image.oy, calc(elev*-1));
+
+		<!-- get the angle for the next scene -->
+		<!-- set(hs, get(hotspot[get(scene_name)])); -->
+		spacetosphere(hs.tx,hs.ty,hs.tz, h,v,depth);
+		<!-- txtadd(arch, get(scene_name), '_arch'); -->
+		<!-- set(hs, get(hotspot[get(arch)])); -->
+
+		<!-- stop stuff time to move on -->
+		stoptween(view.tx,view.ty,view.tz);
+		<!-- stoplookto(); -->
+		<!-- getlooktodistance(result, get(hs.ath), 0); -->
+		if (get(s1.bridge) EQ 'true'
+		,
+
+			if (get(s2.bridge) EQ 'true'
+			,
+			<!-- txtadd(txt, 'Floor ', get(s2.floor_id));
+			set(layer[floor_text].html, get(txt)); -->
+			plugin[scene].update_floor_map(get(scene_name));
+			loadscene(get(scene_name), null, MERGE|KEEPVIEW, BLEND(1, linear));
+			update_minimap_grid(0);
+			,
+			lookto(get(h), 0, get(view.fov), smooth(), true, false);
+			loadscene(get(scene_name), null, MERGE|KEEPVIEW, BLEND(1, linear));
+			update_minimap_grid(1);
+			);
+
+		,
+			lookto(get(h), 0, get(view.fov), smooth(), true, false);
+			loadscene(get(scene_name), null, MERGE|KEEPVIEW, BLEND(1, linear));
+			update_minimap_grid(1);
+
+		);
+
+		
+		set(global.angle, null);
+
+
+	</action>
+
+
+	<action name="add_tooltip" args="txt,off" scope="local">
+	if (get(text)
+	,
+     	addhotspot(auto, tt);
+        tt.loadstyle(tooltip);
+		set(tt.html, get(txt));
+	,
+		addhotspot(auto, tt);
+        tt.loadstyle(tooltip);
+        set(tt.ath, get(caller.ath));
+		txtadd(new_txt, get(text));
+		
+		if(get(off),
+	        set(natv, calc(get(caller.atv)-get(off)));	
+		,
+		    set(natv, calc(get(caller.atv)-10));
+		);
+
+        set(tt.atv, get(natv));
+		
+		if (get(new_txt)
+		,
+       		set(tt.html, get(new_txt));
+		,
+       		set(tt.html, get(caller.tt));
+		);
+
+	);
+		
+	</action>
+
+	<action name="play_outside_mov"></action>
+
+
+	<!-- <action name="open_azure_player" scope="local" args="video">
+		addlayer(video_player, vp);
+    	vp.playvideo(get(video.content),get(video.stream));
+	</action> -->
+
+
+
+
+	<!-- 
+
+		hotspot stuff 
+		
+	 -->
+
+	<action name="hide_hotspots">
+		for(set(i,0), i LT hotspot.count, inc(i),
+			set(hotspot[get(i)].visible, false);
+			set(hotspot[get(i)].enable, false);
+		);
+	</action>
+
+	<action name="lookto_worldspot" args="spot" scope="local">
+		set(hs, get(hotspot[get(spot)]));
+		spacetosphere(hs.tx,hs.ty,hs.tz, h,v,depth);
+	    <!-- lookto(get(h),0,get(view.fov),tween(easeoutquart,.5),true);
+		trace(h); -->
+	</action>
+
+	<!-- 
+
+		Toggle the tour
+
+	 -->
+
+	<action name="toggle_tour" type="Javascript" scope="local"><![CDATA[
+		
+		if (sessionStorage.getItem('mode') == 'tour') {
+			sessionStorage.setItem('mode','explore');
+			//window.location.href =  document.location.origin + document.location.pathname + '?mode=explore';
+			//window.location.reload();
+		} else {
+			sessionStorage.setItem('mode','tour');
+			//window.location.href =  document.location.origin + document.location.pathname + '?mode=tour';
+
+		}
+		window.location.reload();
+
+	]]>	</action>
+
+
+
+	<!-- Plugin stuff -->
+	<!-- <action name="make_html" scope="local">
+		addLayer(html, html);
+		set(html.url, "../app-v1_2/components/html.js");
+	</action> -->
+
+	<!-- 
+
+		SPEAK
+
+	 -->
+
+	<action name="speak_browser" scope="local" type="Javascript"><![CDATA[	
+		if (args[1]) {
+
+		let synth = window.speechSynthesis;
+		this.msg = new SpeechSynthesisUtterance();
+		let cb = args[2] || false;
+		let voices = [];
+		let selectedVoice = null;
+		let poi;
+		window.voice_cancelled = false;
+		voices = synth.getVoices();
+		this.msg.text = args[1];
+
+		this.msg.onend = function(event) {
+
+			if (window.voice_cancelled == true) {
+				window.voice_cancelled = false;
+			} else {
+				if (cb) {
+					checkForPoi();
+				}
+			}
+  			//console.log('Utterance has finished being spoken after ' + event.elapsedTime + ' milliseconds.');
+		}
+
+		function checkForPoi() {
+			if(window.poi_list && window.poi_list.length > 0)
+			{
+				
+				poi = window.poi_list.shift();
+				if (window.poi_list.length == 0) {
+					window.poi_list = null;
+				}
+				krpano.call("update_poi(" + poi + ")");
+				
+			} else {
+				krpano.call("speak_callback()");
+			}	
+		}
+
+		this.msg.onerror = function (event) {
+			checkForPoi();
+			console.error('SpeechSynthesisUtterance.onerror');
+		}
+		
+		var timer = setInterval(function() {	
+			
+			if (voices.length != 0) {
+				for(let i = 0; i < voices.length ; i++) {
+					if(voices[i].name == "Samantha") {
+						selectedVoice = voices[i];
+					} else if(voices[i].name == "Google US English") {
+						selectedVoice = voices[i];
+					} else if (voices[i].voiceURI == "com.apple.speech.synthesis.voice.Fred") {
+						selectedVoice = voices[i];
+					}
+				}	
+
+				this.msg.voice = selectedVoice || voices[0];
+
+				//alert(voices[18].voiceURI);
+				//this.msg.voice = voices[18]; 
+				this.msg.rate = 1;
+				this.msg.pitch = 1;
+				this.msg.lang = 'en-US';
+				this.msg.volume = sessionStorage.getItem("volume") || 1;
+				synth.speak(this.msg);
+				clearInterval(timer);
+
+			} else {
+				voices = synth.getVoices();
+			}
+
+		}, 200);
+
+	} else {
+		krpano.call("speak_callback()");
+	}
+	]]>	</action>
+
+	<!-- <action name="speak" args="txt,cb" scope="local">
+		ifnot(device.ios
+		,
+			trace(get(txt));
+			speak_azure(get(txt),get(cb));
+		,
+			speak_browser(get(txt),get(cb));
+		);
+	</action> -->
+
+	<action name="speak_poi" scope="local">
+		if (get(caller.say) != null
+		,
+			layer[overlay].speak_azure(get(caller.say));
+		);
+	</action>
+
+	<action name="stop_talking" type="Javascript"><![CDATA[
+
+		try {		
+			window.poi_list = null;
+			window.voice_cancelled = true;
+			window.speechSynthesis.cancel();
+			player.pause();
+			player.close();		  
+		} catch(err) {
+			// error
+		}
+	]]>	</action>
+
+	<!-- 
+
+			POI
+
+	 -->
+
+	<!-- <action name="open_welcome_poi" scope="local" args="poi">
+		layer[overlay].show_welcome(get(poi));
+	</action> -->
+	<action name="open_poi" scope="local" args="poi">
+		layer[overlay].show_placard(get(poi));
+	</action>
+	<action name="open_vid_poi" scope="local" args="poi">
+		layer[overlay].show_video(get(poi));
+	</action>
+
+
+	<!-- 
+		
+		debug 
+		
+	-->
+
+	<action name="toggle_debug" type="Javascript" scope="local"><![CDATA[
+        let d = String(localStorage.getItem("debug"));
+        if (d === 'true') {
+            localStorage.setItem("debug", 'false');
+        } else {
+            localStorage.setItem("debug", 'true');
+        }
+        window.location.reload();
+	]]>	</action>
+
+
+	<!-- 
+
+			RESIZE COMPONENTS
+
+	 -->
+	<action name="resize_components" scope="local">
+	     delayedcall(.25,plugin[overlay].resize_overlay(); plugin[cc].resize_overlay(););
+	</action>
+
+
+	<!-- 
+
+		INCLUDES
+		
+	-->
+	<include url="skin/%$skin%/styles.xml" />
+	<plugin name="cc" url="components/cc.js" keep="true" visible="false" enabled="false" handcursor="false" capture="false" />
+	<include url="plugins/depthmap_navigation.xml" if="nav3d == true" />
+	<include url="components/path.xml" />
+	<include url="components/compass.xml" />
+	<include if="mode == 'explore'" url="components/minimap.xml" />
+	<!-- <include url="components/minimap_centered.xml" /> -->
+	<plugin name="gyro" devices="html5" keep="true" url="components/gyro2.js" enabled="true" camroll="true" friction="0.0" touch_mode="full" sensor="1" sensor_mode="1" softstart="0.5" autocalibration="true" desktopsupport="false" onenable="" ondisable="" onavailable="gyro_available_info();" onunavailable="gyro_not_available_info();" />
+	<plugin name="path" keep="true" url="components/path.js" capture="false" />
+	<plugin if="mode == 'explore'" name="overlay" url="components/overlay_explore.js" keep="true" visible="false" capture="true" />
+	<plugin if="mode == 'tour'" name="overlay" url="components/overlay_tour.js" keep="true" visible="false" capture="true" handcursor="false" />
+	<plugin name="soundinterface" url="plugins/soundinterface.js" volume=".5" rootpath="" preload="true" keep="true" />
+	<plugin if="mode == 'tour'" name="tour" keep="true" url="components/tour.js" capture="false" />
+	<include url="explore.xml" if="mode == 'explore'" />
+	<include url="guided_tour.xml" if="mode == 'tour'" />
+
+	<include url="utils/depthmap_helpertool.xml" if="debug == true" />
+	<include url="utils/hotspot_helpertool.xml" if="debug == true" />
+	<include url="debug.xml" if="debug == true" />
+
+	<plugin name="scene" keep="true" url="components/scene.js" enabled="true" capture="false" />
+	<!-- <include url="components/accomplishments.xml" if="mode == 'explore'" /> -->
+</krpano>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html >
+	<head>
+		<meta charset="UTF-8">
+		<title>Tour XML Generator</title>
+
+		<style>
+			#dropzone {
+				text-align: center;
+				height: 100px;
+				margin: 10px;
+				padding: 10px;
+				border: 4px dashed red;
+				border-radius: 10px;
+			}
+
+			#boxtitle {
+				display: table-cell;
+				vertical-align: middle;
+				text-align: center;
+				color: black;
+				font: bold 2em "Arial", sans-serif;
+				width: 100%;
+				height: 100px;
+			}
+
+			body {
+				font: 14px "Arial", sans-serif;	
+			}
+
+			#listing {
+				padding:20px;
+			}
+		</style>
+	</head>
+	<body>
+
+		<!-- <form name="uploadForm">
+			<div>
+			  <input id="uploadInput" type="file" name="myFiles" multiple>
+			  selected files: <span id="fileNum">0</span>;
+			  total size: <span id="fileSize">0</span>
+			</div>
+			<div><input type="submit" value="Send file"></div>
+		</form> -->
+
+		<div id="dropzone">
+		  <div id="boxtitle">
+			Drop Equirectangular Source Panos Here
+		  </div>
+		</div>
+		
+		<div id="listing"></div>
+
+		<script src="tour-xml-generator.js"></script>
+
+	</body>
+</head>

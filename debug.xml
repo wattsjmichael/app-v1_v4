@@ -1,0 +1,132 @@
+<krpano>
+
+	<style name="map_grid" keep="true" enabled="false" alpha=".5" distorted="true" depth="1" scale="1" rotationorder="xyz" rx="-90" torigin="world" tx="0" ty="160" tz="0" depthbuffer="true" visible="false" onloaded.addevent="move_map();" capture="false" handcursor="false"/>
+
+	<events name="skin_events" keep="true" onnewpano="skin_deeplinking_update_url();" onidle="skin_deeplinking_update_url();"/>
+ 
+	<action name="make_floorspot" scope="local" args="ox,oz,oy,name,chi,a">
+
+        <!-- make the floorspot -->
+		addhotspot(get(name), hs);
+		hs.loadstyle(floorspot);
+		set(hs.tx, get(ox));
+		set(hs.tz, get(oz));
+		set(hs.ry, get(a));
+		calc(hs.ty, calc(number(get(oy))+number(get(floor_height))));
+		set(hs.linkedscene, get(name));
+
+		<!-- add the info -->
+		set(hs.html, get(name));
+		if (get(chi) == 0 , set(hs.bgborder, "10 0x00ffff 1"); );
+		if (get(chi) == -1 , set(hs.bgborder, "10 0xffff00 1"); );
+		if (get(chi) == 100 , set(hs.bgborder, "10 0xffffff 1");  );
+
+
+    </action>
+
+	<action name="make_mapspot" scope="local" args="ox,oz,oy,name,f">
+		set(new_x, get(ox));
+		set(new_z, get(oz));
+		inc(new_x, calc(get(start_x)));
+		inc(new_z, calc(get(start_z)));
+		addhotspot(get(name), hs);
+		hs.loadstyle(big_mapspot);
+		if (scene_name EQ hs.name,
+			addhotspot(map_radar, mr);
+			mr.loadstyle(radar_map_style);
+			set(mr.tx, get(new_x));
+			set(mr.tz, get(new_z));
+			calc(mr.ty, calc(number(get(oy))+number(get(floor_height))));
+			set(mr.ry, get(global.hlookat_map));
+		);
+		set(it, calc(get(f)));
+		if (it GT 0
+		,
+		set(hs.bgborder, "20 0x00FFFF 1");
+		set(hs.html, "!");
+		);
+		if (scene[get(name)].stair
+		,
+		txtadd(new_txt, 'S' , get(scene[get(name)].stair));
+		set(hs.html, get(new_txt));
+		set(hs.bgalpha, .8);
+		);
+		set(hs.tx, get(new_x));
+		set(hs.tz, get(new_z));
+		calc(hs.ty, calc(number(get(oy))+number(get(floor_height))));
+		set(hs.linkedscene, get(name));
+    </action>
+
+	<style name="floorspot" keep="false" type="text"
+		css="font-size:30px;text-align:center;weight:bold;color:#FFFFFF;" 
+		width="220" height="220" scale="0.2" vcenter="true"
+		bgcolor="0x000000"
+		bgalpha=".3"
+		bgroundedge="120" bgborder="10 0xff0000 1"
+		oversampling="1" mipmapping="false" zorder="1"
+		distorted="true" depth="0" depthbuffer="true"
+		torigin="world" rotationorder="xyz" rx="-90"
+		onclick="next_scene();"
+		visible="true"
+		enabled="true"
+		ty="160"
+		tx="0"
+		tz="0"
+	/>I
+
+		<style name="vspot" keep="false" type="text"
+		css="font-size:30px;text-align:center;weight:bold;color:#FFFFFF;" 
+		width="220" height="220" scale="0.2" vcenter="true"
+		bgcolor="0x000000"
+		bgalpha=".3"
+		bgroundedge="120" bgborder="10 0xFFFFFF 1"
+		oversampling="1" mipmapping="false" zorder="1"
+		distorted="true" depth="0" depthbuffer="true"
+		torigin="world" rotationorder="xyz" rx="-90"
+		onclick="next_scene();"
+		visible="true"
+		enabled="true"
+		ty="160"
+		tx="0"
+		tz="0"
+	/>
+
+	<style name="symbolic_link" keep="false" type="text"
+		css="font-size:30px;text-align:center;weight:bold;color:#FFFFFF;" 
+		width="220" height="220" scale="0.2" vcenter="true"
+		bgcolor="0x000000"
+		bgalpha=".3"
+		bgroundedge="120" bgborder="10 0xFFFFFF 1"
+		oversampling="1" mipmapping="false" zorder="1"
+		distorted="true" depth="0" depthbuffer="true"
+		torigin="world" rotationorder="xyz" rx="-90"
+		onclick="next_scene();"
+		visible="true"
+		enabled="true"
+		ty="160"
+		tx="0"
+		tz="0"
+	/>
+
+		<action name="setup_first_scene" scope="local">
+
+		set(view, tx=get(image.ox), ty=get(image.oy), tz=get(image.oz));
+
+		set(events[tourevents].onxmlcomplete, null);
+		set(events[tourevents].onloadcomplete,
+			set(events[tourevents].onloadcomplete, tween(view.tx|view.ty|view.tz, '0|0|0', 1, 'linear'););
+		);
+
+	</action>
+
+	<view fovmax="360" fovmin="1" />
+
+
+	<action name="skip_poi" scope="local" type="Javascript"><![CDATA[
+
+		krpano.call("plugin[tour].next_query('yes')");
+		
+
+	]]></action>
+
+    </krpano>

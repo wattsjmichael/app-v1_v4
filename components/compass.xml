@@ -1,0 +1,18 @@
+<krpano>
+	
+	<!-- compass with rotating plate -->
+	<layer keep="true" name="compass" style="compass">
+		<layer name="compass2_plate" style="compass_plate" />
+		<layer name="compass2_pointer" style="compass_pointer" />
+	</layer>
+
+
+	<!-- view changing eeent -->
+	<events keep="true" name="compass_events" onviewchange="compass_update_rotate();" />
+
+	<!-- update the rotation values -->
+	<action name="compass_update_rotate">
+		set(global_heading, 180);
+		calc(plugin[compass2_plate].rotate,  global_heading - view.hlookat);
+	</action>
+</krpano>

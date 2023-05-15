@@ -1,0 +1,97 @@
+<krpano>
+
+	<!-- compass -->
+	<style name="compass" url="compass/compass_bg.png" x="0" y="40" align="topright" children="false" capture="false" handcursor="false" scalechildren="true" scale=".80" alpha=".75" />
+	<style name="compass_plate" url="compass/compass_plate_alpha.png" capture="false" handcursor="false" align="center" zorder="1" scale=".5" />
+	<style name="compass_pointer" url="compass/compass_pointer.png" capture="false" handcursor="false" align="center" zorder="2" scale=".4" />
+
+	<!-- POI's -->
+	<style name="blank" type="text" fov="120" enabled="false" visible="false" atv="0" onclick="" capture="false" />
+	<style name="poi" fov="120" alpha="1" scale=".4" zorder="2" distorted="true" torigin="view" enabled="true" visible="true" atv="0" capture="false" url="cyan_dot.png" onloaded="add_tooltip()" onover="tween(scale,.75,.25,easeinbouce);" onout="tween(scale,.4)" />
+	<!-- onover="tween(scale,.75,.25,easeinbouce);" onout="tween(scale,.4)" -->
+	<style name="tooltip" keep="false" type="text" css="color:#00fcff;font-size:18px;text-align:center;" bgcolor="0x000000" padding="4 8" bgroundedge="10" bgborder="1 0x00fcff 1" oversampling="2" mipmapping="true" capture="false" enabled="false" visible="true" bgalpha=".7" />
+	<style name="street_sign" atv="-30" keep="true" type="text" css="color:white;font-size:14px;text-align:center;" bgcolor="0x006600" padding="4 8" bgroundedge="10" bgborder="1 0xFFFFFF 1"  handcursor="false" oversampling="2" mipmapping="true" capture="false" enabled="false" visible="true" bgalpha=".7" />
+	<style name="stair" tt="STAIR" url="hotspots/stairwell.png" onover="" handcursor="false" alpha=".5" />
+	<style name="fire_ext" fov="80" url="hotspots/fire_ext.png" onclick="open_vid_poi('fire_ext_poi'); send_accomp('ext_use');" tt="Fire Extinguisher" />
+	<style name="defib" fov="80" url="hotspots/defib.png" tt="Defibrillator" onclick="send_accomp('defib'); open_poi('defib')" />
+	<style name="sprinkler" url="hotspots/sprinkler.png" tt="Sprinkler"  onclick="open_poi('sprinkler'); send_accomp('sprinkler');"/>
+	<style name="warden_phone" url="phone.png" tt="Warden Phone" onclick="open_poi('warden_phone')" />
+	<style name="evac_sign" url="hotspots/evac_sign.png" tt="Evacuation Signage" onclick="open_poi('evac_sign'); send_accomp('evac_signage');" />
+	<style name="em_phone" url="phone.png" tt="Emergency Phone" onclick="open_poi('em_phone')" />
+	<style name="em_inter" url="phone.png" tt="Emergency Intercom" onclick="open_poi('em_inter')" />
+	<style name="sp_strobe" url="hotspots/fire_alarm.png" tt="Speaker Strobe" onclick="open_poi('sp_strobe'); send_accomp('pa_speaker');" />
+	<style name="em_light" url="hotspots/em_lights.png" tt="Emergency Lighting" onclick="open_poi('em_light')" />
+	<style name="ff_phone" url="phone.png" tt="Firefighter Phone" onclick="open_poi('ff_phone')" />
+	<style name="exit_floor" url="hotspots/outside.png" tt="Exit Building" onclick="find_item('outside')" />
+	<!-- calling open_poi with no args will set an accomplishment but not pop up anything -->
+	<style name="outside" url="hotspots/outside.png" onclick="open_poi()" />
+	<style name="el_em_phone" tt="Elevator Emergency Phone" url="phone.png" onclick="open_poi('el_em_phone'); send_accomp('elev_phone');" />
+	<style name="blue_phone" tt="Emergency Phone" url="phone.png" onclick="open_poi('blue_phone')" />
+	<style name="pull_station" url="hotspots/fire_alarm.png" tt="Manual Pull Station" onclick="open_poi('pull_station')" />
+	<style name="first_aid" url="hotspots/first_aid.png" tt="First Aid Station" onclick="open_poi('first_aid')" />
+
+	<!-- nadir -->
+	<style name="nadir_spot" keep="true" url="compass/nadir_compass.png" zorder="2" alpha="1" distorted="true" depth="0" depthbuffer="true" torigin="world" rotationorder="xyz" rx="-90" ty="165" tx="0" tz="0" visible="true" enabled="false" scale=".15" handcursor="false" capture="false" />
+
+	<!-- hud -->
+	<style name="items_hud_style" keep="true" type="container" align="top" Y="90" bgcapture="true" handcursor="false" scalechildren="false" bgcolor="0x000000"/>
+    <style name="item_hud_style" enabled="false" alpha=".5"  handcursor="true"/>
+
+	<!-- ui top bar -->
+	<style name="ui_bar_style_explore" keep="true" type="container" bgcolor="0xbb0000" bgalpha="1" align="top" width="100%" height="40" bgcapture="true" handcursor="false" />
+	<style name="ui_bar_style_tour" keep="true" type="container" bgcolor="0x77bf00" bgalpha="1" align="top" width="100%" height="40" bgcapture="true" handcursor="false" />
+	<style name="ui_icon_style" scale=".2" y="10" visible="true" />
+	<style name="floortext_style" type="text" enabled="true" handcursor="false" bgcolor="0xbb0000" bgalpha="0" css="text-align:right; color:0xffffff; font-family:Arial; font-size:18px; font-weight:normal;" />
+	<style name="towertext_style" type="text" enabled="true" handcursor="false" bgcolor="0xbb0000" bgalpha="0" css="text-align:right; color:0xffffff; font-family:Arial; font-size:18px; font-weight:normal;" />
+	<style name="tourbar_style" keep="true" type="container" bgcolor="0x000000" bgalpha=".65" align="topleft" width="100%" height="100" y="40" />
+	<style name="bar_style" keep="true" type="container" bgcolor="0x77bf00" bgalpha="1" align="topleft" width="100%" height="1" y="100" />
+
+	<!-- floor / stair vids -->
+	<style name="tray_vids" type="container" align="bottomright" scalechildren="true" mobile.scale=".75" keep="true" handcursor="false" width="180" height="200" bgalpha="0" bgcolor="0x000000" visible="true" />
+	<style name="tray_icon_style" width="75" height="75" alpha="1" scale="1.3" enabled="true" visible="true" onloaded="tween(scale, 1, .5, easeinbounce)" edge="center" onover="tween(scale,1.2,.1,easeinbouce)" onout="tween(scale,1,.1)" />
+	<style name="tray_title" type="text" css="color:white;font-size:14px;text-align:center" y="5" align="centertop" bg="false" />
+	<style name="tray_vid_con_style" type="container" width="150" height="150" x="85" y="85" edge="center" align="bottomright" scalechildren="true" maskchildren="false" />
+
+
+
+	<!-- arches floorspot -->
+	<style name="arch_3d" keep="false" type="text" alpha="1" bgalpha=".1" css="font-size:20px;text-align:center;weight:bold;color:#00ffff;" width="200" height="350" scale="1" align="center" vcenter="true" bgcolor="0xFFFFFF" bgroundedge="5" bgborder="2 0x00ffff .7" oversampling="1" mipmapping="false" zorder="1" distorted="true" depth="0" depthbuffer="true" torigin="world" rotationorder="xyz" onclick="next_scene();" visible="false" enabled="true" tx="0" tz="0" capture="false" />
+	<style name="arch" onover="tween(alpha,1); tween(scale,1.2)" onout="tween(alpha,.7); tween(scale,1)" keep="false" width="400" height="700" alpha=".7" type="text" css="font-size:30px;text-align:center;weight:bold;color:#00ffff;padding-top:300px" bgcolor="0xffffff" bgroundedge="5" bgborder="4 0x00ffff 1" bgalpha=".1" oversampling="0" mipmapping="false" zorder="1" distorted="true" torigin="view" onclick="next_scene();" visible="false" enabled="true"  atv="0" ath="0" capture="false" />
+	<!-- onover="tween(alpha,1); tween(scale,1.2)" onout="tween(alpha,.7); tween(scale,1)" -->
+	<!-- <style name="arch" /> -->
+	<style name="arrow_up" onloaded="add_tooltip()" ath="-7" tt="UP" url="arrow_up.png" alpha="1" scale=".4" zorder="2" distorted="true" torigin="view" enabled="true" visible="true" atv="0" onclick="next_vert_scene()" onover="tween(scale,.6,.25,easeinbouce)" onout="tween(scale,.4)" capture="false" />
+	<style name="arrow_down" onloaded="add_tooltip()" ath="7" tt="DOWN" url="arrow_down.png" alpha="1" scale=".4" zorder="2" distorted="true" torigin="view" enabled="true" visible="true" atv="0" onclick="next_vert_scene()" onover="tween(scale,.6,.25,easeinbouce)" onout="tween(scale,.4)" capture="false" />
+	<style name="exit_floor_button" onloaded="add_tooltip(false,-7)" url="hotspots/stairwell.png" tt="Exit Floor" scale=".4" atv="10" onclick="find_item('exit_floor')" zorder="2" distorted="true" torigin="view" enabled="true" visible="true"  onover="tween(scale,.6,.25,easeinbouce)" onout="tween(scale,.4)" capture="false" />
+	<style name="floorspot" />
+	<style name="vspot" />
+	<style name="symbolic_link" />
+
+	<!-- <style name="person" url="hotspots/test.png" tx="100" ty="100" distorted="true" depth="0" depthbuffer="true" torigin="world" rotationorder="xyz" ry="-90" width="512" height="512" /> -->
+
+	<!-- Tour Styles -->
+	<style name="next_but" keep="true" url="next_but.png" />
+	<style name="tour_query" url="cyan_dot.png" transport="shuttle" onclick="perform_tour_query()" />
+
+	<!-- tour controls -->
+	<style name="tour_controls_style" type="container" bgroundedge="75" bgborder="0" bgcolor="0x000000" bgalpha="1" width="150" height="150"  edge="center" align="bottomcenter" scalechildren="true" keep="true" handcursor="false" capture="true" maskchildren="true" />
+
+
+	<!-- minimap -->
+	<style name="minimap_container_style" mobilescale=".5" type="container" bgroundedge="75" bgborder="0" z-index="10" bgcolor="0x000000" bgalpha="1" width="150" height="150" x="85" y="85" edge="center" align="bottomleft" scalechildren="true" keep="true" handcursor="false" capture="true" maskchildren="true" />
+	<style name="minimap_clipped_style" align="center" onclick="toggle_big_map();" handcursor="true" />
+	<style name="clicker" type="text" align="center" onclick="toggle_big_map();" width="150" height="150" bgcolor="0x000000" bgalpha="1" enabled="true" visible="true" keep="true"/>
+	<style name="mapspot" keep="true" url="cyan_dot.png" scale=".2" align="center" enabled="false" visible="true" capture="true" />
+	<!-- <style name="big_mapspot" onclick="hide_big_map();" width="230" height="230" scale=".2" url="cyan_dot.png" edge="center" align="center" depthbuffer="true" distorted="false" torigin="world" rotationorder="xyz"  ty="160" rx="-90" ry="0"/> -->
+	<style name="big_mapspot" onclick="hide_big_map();" keep="false" type="text" css="font-size:100px;text-align:center;font-weight:bold;color:#000000;" width="230" height="230" scale="0.4" vcenter="true" bgcolor="0x666666" bgalpha=".5" bgroundedge="135" bgborder="20 0x666666 1" oversampling="1" mipmapping="false" zorder="1" distorted="true" depth="0" depthbuffer="true" torigin="world" rotationorder="xyz" rx="-90" ry="0" visible="true" enabled="true" ty="160" tx="0" tz="0" />
+	<!-- <style name="big_mapspot" onclick="hide_big_map();" keep="false" type="text" css="font-size:100px;text-align:center;font-weight:bold;color:#000000;" width="230" height="230" scale="0.4" vcenter="true" bgcolor="0xCCCCCC" bgalpha=".5" bgroundedge="135" bgborder="20 0xCCCCCC 1" oversampling="1" mipmapping="false" zorder="1" distorted="true" depth="0" depthbuffer="true" torigin="world" rotationorder="xyz" rx="-90" ry="0" visible="true" enabled="true" ty="160" tx="0" tz="0" /> -->
+	<style name="map_close_but" url="close_but.png" keep="true" align="bottomleft" x="6" y="6" scale="1.8" visible="false" onclick="toggle_big_map();" handcursor="true" />
+	<style name="radar_explore_style" fillalpha="0.6" fillcolor="0x00ffff" linewidth="1.0" linecolor="0x00ffff" enabled="false" />
+	<style name="radar_tour_style" fillalpha="0.6" fillcolor="0x4CE64E" linewidth="1.0" linecolor="0x4CE64E" enabled="false" />
+	<style name="radar_map_style" url="radar.png" align="center" keep="false" width="400" height="400" scale="1.5" mobilescale="2.0" zorder="1" distorted="true" depth="0" depthbuffer="true" torigin="world" rotationorder="xyz" rx="-90" ry="0" visible="true" enabled="false" ty="160" tx="0" tz="0" />
+
+	<!-- <style name="map_blocker" type="text" align="center" keep="false" enabled="true" alpha="1" distorted="true" width="1000" height="1000" scale="12" rotationorder="xyz" rx="-90" torigin="world" tx="0" ty="160" tz="0" visible="false" capture="true" handcursor="false" bgcolor="0x000000" bgalpha="1" depth="-1" depthbuffer="true" valign="true" /> -->
+
+	<style name="map_grid" keep="true" depth="0" depthbuffer="true" enabled="false" alpha="0" distorted="true" scale="1" rotationorder="xyz" rx="-90" torigin="world" tx="0" ty="160" tz="0" visible="false" capture="false" handcursor="false" align="center" />
+
+
+</krpano>

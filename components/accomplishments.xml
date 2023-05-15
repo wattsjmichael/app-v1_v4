@@ -1,0 +1,84 @@
+<krpano>
+
+    <action name="init_accomp" autorun="onstart">
+        if (get(accomp)
+        ,
+        delayedcall(1, show_accomp());
+        );
+    </action>
+
+    <action name="show_accomp" type="Javascript" scope="local"><![CDATA[
+        let accomp = sessionStorage.getItem("accomp");
+        let a = undefined;
+        try {
+            if (accomp.length > 0) {
+                a = accomp.split(",");
+                if (a) {
+                    for (var i = 0 ; i < a.length-1 ; i++) {
+                        krpano.set('layer[' + a[i] + '].alpha', 1);
+                    }
+                }
+            }
+        } catch (e) {
+            console.log("ERROR", "Cannot read accomplishment from session storage:" + accomp);
+        };
+	]]>    </action>
+
+    <action name="set_accomp" type="Javascript" scope="local"><![CDATA[
+        let accomp = sessionStorage.getItem("accomp");
+        let search = accomp.search("'" + args[1] + "'");
+        if (search == -1) {
+             sessionStorage.setItem("accomp", '' + accomp + args[1] + ',');
+        }
+
+	]]>    </action>
+
+    <action name="set_send_accomp" type="Javascript" scope="local"><![CDATA[
+        let accomp = sessionStorage.getItem("accomp");
+        let search = accomp.search("'" + args[1] + "'");
+       
+
+        if (search == -1) {
+             sessionStorage.setItem("accomp", '' + accomp + args[1] + ',');
+             console.log(args[1]);
+              krpano.call('send_accomp(' + args[1] + ')');
+              krpano.set('layer[' + args[1] + '].alpha',1);
+        }
+
+	]]>    </action>
+
+
+    <action name="is_found" args="name" scope="local">
+        set(l, get(layer[get(name)]));
+        if (l.alpha EQ "1"
+        ,
+            txtadd(t, 'You found ', get(l.html), '!');
+        ,
+            txtadd(t, 'Find ', get(l.html), '!');
+        );
+        layer[overlay].show_html_placard(get(t), get(t));
+    </action>
+
+    <action name="open_poi" scope="local" args="poi">
+        <!-- TO READ STYLE UNCOMMENT TRACE -->
+        <!-- trace(get(caller.style)); -->
+        if (get(layer[get(caller.style)]) != null
+            ,
+            set(layer[get(caller.style)].alpha, 1);
+        );
+        if(get(poi) != null
+		,
+        layer[overlay].show_placard(get(poi));
+        );
+        set_accomp(get(caller.style));
+    </action>
+    <action name="open_vid_poi" scope="local" args="poi">
+        if (get(layer[get(caller.style)]) != null
+            ,
+            set(layer[get(caller.style)].alpha, 1);
+        );
+		layer[overlay].show_video(get(poi));
+        set_accomp(get(caller.style));
+    </action>
+
+</krpano>

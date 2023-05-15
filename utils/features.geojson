@@ -1,0 +1,128 @@
+{
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 2,
+        "parent": 1,
+        "children": 3,
+        "name": "GS__0787"
+      },
+      "geometry": {
+        "coordinates": [
+          -122.399548,
+          37.788797
+        ],
+        "type": "Point"
+      },
+      "id": "00aee03d4e1c880f413bf5520d1553ad"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 5,
+        "parent": 4,
+        "poi": "fire_ext|defib",
+        "name": "GS__0792",
+        "children": 6
+      },
+      "geometry": {
+        "coordinates": [
+          -122.399481,
+          37.7887
+        ],
+        "type": "Point"
+      },
+      "id": "3c342bc6155f797c6d4690f706de677c"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 3,
+        "parent": 2,
+        "children": 4,
+        "name": "GS__0790"
+      },
+      "geometry": {
+        "coordinates": [
+          -122.39955,
+          37.788748
+        ],
+        "type": "Point"
+      },
+      "id": "584b622fb762ebc05082f654ec264394"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 6,
+        "name": "GS__1000",
+        "parent": 5,
+        "children": 7
+      },
+      "geometry": {
+        "coordinates": [
+          -122.399416,
+          37.788699
+        ],
+        "type": "Point"
+      },
+      "id": "8de3965fd6c9c56abdc445968e56771c"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "accuracy": "rooftop",
+        "place_name": "560 Mission Street, San Francisco, California 94105, United States",
+        "id": 1,
+        "name": "GS__0785",
+        "children": 2,
+        "poi": "el_em_phone",
+        "floor_id": 3,
+        "elevation": 24
+      },
+      "geometry": {
+        "coordinates": [
+          -122.399484,
+          37.788799
+        ],
+        "type": "Point"
+      },
+      "id": "address.100822031428178"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 4,
+        "parent": 3,
+        "children": 5,
+        "name": "GS__0791"
+      },
+      "geometry": {
+        "coordinates": [
+          -122.399548,
+          37.7887
+        ],
+        "type": "Point"
+      },
+      "id": "d4f762ea6355b5286364e18ab2767267"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": 7,
+        "parent": 6,
+        "name": "GS__10001"
+      },
+      "geometry": {
+        "coordinates": [
+          -122.399355,
+          37.788699
+        ],
+        "type": "Point"
+      },
+      "id": "e4e2299d16824cdd727297b1122eb151"
+    }
+  ],
+  "type": "FeatureCollection"
+}
