@@ -414,50 +414,45 @@ function krpanoplugin() {
 
 
     }
-
+//Completely changed floor menu
     function show_floor_menu(html) {
-
         hide_overlay();
         current_type = "html";
         plugin.visible = true;
-     
-
-       
-      
-
-        
+    
         var container = document.createElement("div");
         container.setAttribute("id", "overlay-content");
         container.innerHTML = `
-                <div class="flex-container animated fadeIn bg-overlay">
-                    <div class="row">`
-                    
-            + html +
-            `<div class="flex-item" style="text-align:center">
-                   <img src="../`  +  app_version + `/skin/ak/close_but.png" id="close_but" />
-             </div>
-            </div>
-                </div>`;
-
-        // krpano.set('layer[minimap_container].visible', false);
+            <div class="flex-container animated fadeIn bg-overlay">
+                <div class="row">
+                    ${html}
+                    <div class="flex-item" style="text-align:center">
+                        <img src="../${app_version}/skin/ak/close_but.png" id="close_but" />
+                    </div>
+                </div>
+            </div>`;
+    
         plugin.sprite.appendChild(container);
         let close_but = document.getElementById("close_but");
         close_but.onpointerup = function () {
             hide_overlay();
-
-        }
+        };
+    
         let links = document.getElementsByClassName('floor_link');
-
-        for (var l in links) {
+    
+        for (let l = 0; l < links.length; l++) {
             links[l].onpointerup = function () {
-
                 window.location.href = this.getAttribute("href");
-
-
+            };
+    
+            let floorText = links[l].innerHTML;
+            let [towerId, floorNumber] = floorText.split('-').map(str => (str || '').trim());
+    
+            if (floorNumber) {
+                links[l].innerHTML = floorNumber;
+                links[l].setAttribute("title", `Tower: ${towerId}`);
             }
         }
-
-
     }
 
     function show_tower_menu(html) {

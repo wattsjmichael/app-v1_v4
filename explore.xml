@@ -6,6 +6,7 @@
         
      -->
 
+
     <layer name="ui_bar" style="ui_bar_style_explore">
         <layer if="debugmode == true" interactivecontent="true" name="debug_button" type="text" html="!" y="10" x="145" scale=".16" onclick="toggle_debug();" bgcolor="0x000000" bgalpha=".2" css="font-family:Arial; font-size:11px; color:#FFFFFF;" padding="4" bgborder="1 0xffffff 1" />
         <layer name="home_button" style="ui_icon_style" url="skin/%$skin%/home.png" x="15" onclick="plugin[scene].go_home()" />

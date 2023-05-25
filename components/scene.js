@@ -7,7 +7,7 @@ function krpanoplugin() {
     let krpano = null;  // the krpano and plugin interface objects
     let plugin = null;
     let floor_map;
-    // let tower_id = 1;
+    // let tower_id = null;
     let street_map;
     let current_floor;
     let current_tower;
@@ -31,6 +31,7 @@ function krpanoplugin() {
         plugin = pluginobject;
         // add plugin action (the attribute needs to be lowercase!)
         plugin.set_elevations = set_elevations;
+        plugin.change_tower = change_tower;
         plugin.change_floor = change_floor;
         plugin.get_spawn = get_spawn;
         plugin.floor_menu = floor_menu;
@@ -53,6 +54,9 @@ function krpanoplugin() {
         plugin.generate_global_positions = generate_global_positions;
         plugin.registerattribute("current_elev", "current_elev");
         plugin.registerattribute("next_elev", "next_elev");
+
+
+
         try {
             floor_map = JSON.parse(krpano.get('data[floor_map].content'));
             // console.log(floor_map);
@@ -62,28 +66,20 @@ function krpanoplugin() {
         }
 
 
-        //PURE HACKERY! MW 5.15.23 TODO Fix the inital null values
-        const refreshFlag = sessionStorage.getItem("refreshFlag");
-        if (!refreshFlag) {
-            // Set the refresh flag to prevent further refreshes
-            sessionStorage.setItem("refreshFlag", "true");
-            
-            // Refresh the page
-            location.reload();
-          }
         
 
-        // generate the scenes
         generate_path();
-        // generate_global_positions();
+        
 
 
         current_floor = krpano.get('startfloor');
 
-        current_tower = krpano.get("scene[get(startscene)].tower_id")
 
-        console.log(current_tower, "current tower");
-     
+        current_tower = krpano.get("scene[get(startscene)].tower_id");
+        console.log(curr_scene, "Current scene");
+
+
+
 
 
 
@@ -91,13 +87,13 @@ function krpanoplugin() {
 
             if (floor_map[current_tower][current_floor]) {
                 krpano.set('startscene', floor_map[current_tower][current_floor].spawn);
-                // console.log("startscene");
                 krpano.call('startup()');
             } else {
                 let result = krpano.get('scene').getArray();
                 if (result) {
                     if (result.length > 0) {
                         current_floor = result[0].floor_id;
+
                     }
                 }
                 krpano.set('startscene', 0);
@@ -108,11 +104,13 @@ function krpanoplugin() {
                 // sessionStorage.setItem('starttower', current_tower);
             }
         } else {
-            console.log('null');
+
             krpano.call('startup()');
             current_floor = krpano.get('startfloor');
-            
-            // current_tower = krpano.get('starttower');
+
+
+
+
             // console.log(current_floor, "curflo");
             // console.log(current_tower, "curtow");
         }
@@ -124,26 +122,32 @@ function krpanoplugin() {
 
 
         // load the map and change the floor
-        change_floor(current_floor, current_tower);
-        change_tower(current_floor, current_tower);
+        change_tower(current_floor);
+        change_floor(current_floor, tower_id);
+        console.log(current_tower, "THIS TOWER ID");
 
-        let spawn = floor_map[current_tower][current_floor].spawn;
-        console.log(spawn + "Spawn")
+
+        let spawn;
+        if (floor_map[current_tower] && floor_map[current_tower][current_floor]) {
+            spawn = floor_map[current_tower][current_floor].spawn;
+        } else {
+            console.log('Tower or floor data is missing in floor_map');
+        }
         if (start_scene.toLowerCase() == spawn.toLowerCase()) {
             let o = floor_map[current_tower][current_floor];
             krpano.set('view.hlookat', o.angle);
         }
 
-        try {
-            street_map = JSON.parse(krpano.get('data[street_map].content'));
-            for (var i in street_map) {
-                krpano.call('street_sign(' + street_map[i].name + ',' + street_map[i].ath + ')');
-            }
-        } catch (e) {
-            console.log("ERROR", "Error Parsing street JSON");
-        }
+        // try {
+        //     street_map = JSON.parse(krpano.get('data[street_map].content'));
+        //     for (var i in street_map) {
+        //         krpano.call('street_sign(' + street_map[i].name + ',' + street_map[i].ath + ')');
+        //     }
+        // } catch (e) {
+        //     console.log("ERROR", "Error Parsing street JSON");
+        // }
 
-      
+
     }
 
     // unloadplugin - exit point for the plugin (optionally)
@@ -346,7 +350,7 @@ function krpanoplugin() {
             window.tower_id = sa.tower_id;
             window.current_tower = sa.tower_id;
 
-            // console.log(sa.tower_id);
+            //console.log(sa.tower_id, "get xml tower_id");
 
         }
 
@@ -362,7 +366,7 @@ function krpanoplugin() {
                 scene_indexed[floor_id] = [];
                 scene_indexed[floor_id].push(name);
             }
-            console.log(window.current_tower, "wct");
+            //console.log(window.current_tower, "wct");
             o[name] = { global_position: null, local_position: null, parent: null, children: [], items: [], vparent: false, stair: stair, bridge: bridge, floor: floor_id, tower: window.current_tower };
             // console.log(o[name])
         }
@@ -457,7 +461,7 @@ function krpanoplugin() {
     }
 
     function get_spawn(floor_id) {
-        console.log(floor_id);
+        //console.log(floor_id);
         //    plugin.is_spawn = Boolean(floor_map[a].elev);
     }
 
@@ -472,10 +476,11 @@ function krpanoplugin() {
         // check if its a stair and spin t9o stair nav unles there is a search item to point to
         curr_scene = krpano.get('scene_name');
         let current_floor = krpano.get('startfloor');
-        let current_tower = krpano.get('scene').getArray()[0].tower_id;
+        //let current_tower = krpano.get('scene').getArray()[0].tower_id;
         scenes[curr_scene].floor = current_floor;
-        scenes[curr_scene].tower = current_tower;
-        console.log(current_tower, "INIT SCENE")
+        current_tower = scenes[curr_scene].tower;
+       
+        //console.log(current_tower, "INIT SCENE")
         // scenes[curr_scene].tower = current_tower;
         let search_item = sessionStorage.getItem("search_item");
         let auto_nav = sessionStorage.getItem("auto_nav");
@@ -514,12 +519,13 @@ function krpanoplugin() {
         } else {
             krpano.call('set(layer[stair_vids].visible, false); set(layer[floor_vids].visible, true);');
         }
-        
+
+
     }
 
     function set_elevations(a, b) {
         // console.log(scenes[b], "scenes")
-        console.log(a, "A");
+        //console.log(a, "A");
         //NEXT SCENE COULD BE IN A DIFFERENT TOUR! FIX IT!!
         plugin.current_elev = Number(floor_map[current_tower][a].elev);
         plugin.next_elev = Number(floor_map[current_tower][b].elev);
@@ -549,32 +555,62 @@ function krpanoplugin() {
     //   }
 
     function change_floor(floor_id) {
-        // or 2, depending on the tower you want to access
-        console.log(current_tower, "tid");
-        console.log(floor_id);
+        //console.log(current_tower, "tid");
+        //console.log(floor_id, "floor_id");
+
+        if (!floor_map[current_tower]) {
+            console.error('Tower ' + current_tower + ' does not exist in floor_map');
+            return;
+        }
+
+        if (!floor_map[current_tower][floor_id]) {
+            console.error('Floor ' + floor_id + ' does not exist in tower ' + current_tower);
+            return;
+        }
+
         let o = floor_map[current_tower][floor_id];
-        // console.log(" tower_id ", floor_map[tower_id][floor_id]);
+
         plugin.current_elev = Number(o.elev);
         krpano.call('load_map("' + o.map.name + '","' + o.map.scale + '")');
-        krpano.set('layer[floor_text].html', "Floor " + floor_id);
+        krpano.set('layer[floor_text].html', "Floor " + floor_id.split('-')[1].trim()); //MIchael Code
         current_floor = floor_id;
-        // current_tower = tower_id;
         krpano.call('offset_radar(' + o.map.offset_x + ',' + o.map.offset_y + ',' + o.map.mm_scale + ',' + o.map.scale + ')');
     }
 
     function change_tower(floor_id) {
-        // or 2, depending on the tower you want to access
-        console.log(current_tower, "tid");
-        console.log(floor_id);
+      
+        
         let o = floor_map[current_tower][floor_id];
-        // console.log(" tower_id ", floor_map[tower_id][floor_id]);
+        //console.log(floor_map[current_tower], "Matthews code");
+        if (typeof o === 'undefined') {
+            console.log("something is going on here")
+        }
         plugin.current_elev = Number(o.elev);
-        krpano.call('load_map("' + o.map.name + '","' + o.map.scale + '")'); 
+        krpano.call('load_map("' + o.map.name + '","' + o.map.scale + '")');
         krpano.set('layer[tower_text].html', "Tower " + current_tower);
+       
         current_floor = floor_id;
-        // current_tower = tower_id;
+        
         krpano.call('offset_radar(' + o.map.offset_x + ',' + o.map.offset_y + ',' + o.map.mm_scale + ',' + o.map.scale + ')');
     }
+
+    // function change_tower(tower_id) {
+    //     // Get the first floor of the tower. This is a simplification; you might want to choose a specific floor
+    //     let firstFloorId = Object.keys(floor_map[tower_id])[0];
+    //     let o = floor_map[tower_id][firstFloorId];
+
+    //     console.log("Changing to tower", tower_id, "and floor", firstFloorId);
+
+    //     plugin.current_elev = Number(o.elev);
+    //     krpano.call('load_map("' + o.map.name + '","' + o.map.scale + '")'); 
+    //     krpano.set('layer[tower_text].html', "Tower " + tower_id);
+
+    //     // Update the current tower and floor
+    //     current_tower = tower_id;
+    //     current_floor = firstFloorId;
+
+    //     krpano.call('offset_radar(' + o.map.offset_x + ',' + o.map.offset_y + ',' + o.map.mm_scale + ',' + o.map.scale + ')');
+    // }
 
     function update_floor_map(cs) {
         let floor = scenes[cs].floor;
@@ -613,8 +649,7 @@ function krpanoplugin() {
         if (floor_map.hasOwnProperty(current_tower)) {
             const currentTower = floor_map[current_tower];
             for (var floor_id in currentTower) {
-                console.log(floor_id); // Log the floor_id
-                console.log(current_tower); // Log the current_tower
+
 
                 if (currentTower[floor_id].sort !== undefined) {
                     a.push('<div class="floor_link" href="' + document.location.origin + document.location.pathname + '?startscene=' + currentTower[floor_id].spawn + '">' + floor_id + '</div>');
@@ -672,8 +707,8 @@ function krpanoplugin() {
                     if (tower.hasOwnProperty(floor_id)) {
                         const floor = tower[floor_id];
                         if (floor.hasOwnProperty("tower_spawn")) {
-                            a.push('<div class="floor_link" href="' + document.location.origin + document.location.pathname + '?tower=' + tower_id + '&startscene=' + floor.tower_spawn + '">' + tower_id + '</div>');
-                            break; // Exit the inner loop after finding the tower_spawn property
+                            a.push('<div class="floor_link" onclick="window.location.href=\'' + document.location.origin + document.location.pathname + '?tower=' + tower_id + '&startscene=' + floor.tower_spawn + '\';">' + tower_id + '</div>');
+                            //console.log(a); // Exit the inner loop after finding the tower_spawn property
                         }
                     }
                 }
@@ -691,4 +726,6 @@ function krpanoplugin() {
 
 
 }
+
+
 
