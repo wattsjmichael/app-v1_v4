@@ -199,12 +199,14 @@ updatescreen();
 	]]>	</action>
 
 	<action name="skin_nextscene_loop" scope="local" args="indexadd">
+	
 		add(newsceneindex, scene[get(xml.scene)].index, indexadd);
 		sub(lastsceneindex, scene.count, 1);
 		if(newsceneindex LT 0, copy(newsceneindex,lastsceneindex));
 		if(newsceneindex GT lastsceneindex, set(newsceneindex,0));
 						<!-- loadscene(get(scene[get(newsceneindex)].name), null, MERGE|KEEPVIEW); -->
 		next_scene(get(scene[get(newsceneindex)].name));
+		
 	</action>
 
 

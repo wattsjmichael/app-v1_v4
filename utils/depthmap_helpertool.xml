@@ -205,6 +205,7 @@ updatescreen();
 		if(newsceneindex GT lastsceneindex, set(newsceneindex,0));
 						<!-- loadscene(get(scene[get(newsceneindex)].name), null, MERGE|KEEPVIEW); -->
 		next_scene(get(scene[get(newsceneindex)].name));
+		set(hotspot[map_grid].visible, true);
 	</action>
 
 

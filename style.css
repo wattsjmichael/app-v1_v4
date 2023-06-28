@@ -176,6 +176,15 @@ a.auto-nav-off  {
     margin:0 1em;
     text-align: center;
 }
+
+td.centered {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+
+
 .quiz {
     max-width:320px;
     background-color: rgba(0,0,0,0.75);
@@ -271,12 +280,20 @@ a.auto-nav-off  {
     animation-name: fadeIn;
  }
  td {
-     padding:.5em;
+     padding:1em;
  }
+
  .border {
-     border:2px solid cyan;
+     border: 2px solid cyan;
      cursor: pointer;
+     margin: 500px;
+     
  }
+
+ .tour_start {
+    border-collapse: separate;
+    border-spacing: 25px; /* Adjust the value to set the desired space between cell borders */
+  }
 
  .borderNS {
     border:2px solid grey;
@@ -313,3 +330,9 @@ a.auto-nav-off  {
 }
 
 
+.next_arrow{
+    width: 15%
+}
+
+
+    

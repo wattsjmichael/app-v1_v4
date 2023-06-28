@@ -450,7 +450,7 @@ function krpanoplugin() {
     
             if (floorNumber) {
                 links[l].innerHTML = floorNumber;
-                links[l].setAttribute("title", `Tower: ${towerId}`);
+               
             }
         }
     }
@@ -460,6 +460,7 @@ function krpanoplugin() {
         hide_overlay();
         current_type = "html";
         plugin.visible = true;
+        console.log(html);
      
 
        

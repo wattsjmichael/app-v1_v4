@@ -79,8 +79,8 @@
 		       />
 
 		<layer name="hsht_sprinkler" style="hsht_button" align="top" x="0" y="92" width="180"
-		       html="Add Sprinkler"
-		       onclick="add_sprinkler();"
+		       html="Add Tour Stop"
+		       onclick="add_tour_stop();"
 		       />
 
 		<layer name="hsht_warden_phone" style="hsht_button" align="top" x="0" y="115" width="180"
@@ -564,10 +564,10 @@ start_tour,chooser,start_vid_catalog,jackson_greeter,food_court_catalog,level_fo
 			);
 
 	</action>
-	<action name="add_sprinkler" scope="local">
+	<action name="add_tour_stop" scope="local">
 
-		addhotspot(sprinkler, tb);
-		tb.loadstyle(poi|sprinkler);
+		addhotspot(poi, tb);
+		tb.loadstyle(poi);
 		set(tb,
 			ath=get(view.hlookat),
 			zorder=100,

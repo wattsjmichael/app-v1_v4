@@ -191,6 +191,7 @@ function krpanoplugin() {
 
     function go_home() {
         ofloor = sessionStorage.getItem("originatingfloor");
+        console.log(ofloor);
         window.location.href = document.location.origin + document.location.pathname + '?startfloor=' + ofloor;
     }
 
@@ -587,7 +588,7 @@ function krpanoplugin() {
         }
         plugin.current_elev = Number(o.elev);
         krpano.call('load_map("' + o.map.name + '","' + o.map.scale + '")');
-        krpano.set('layer[tower_text].html', "Tower " + current_tower);
+        krpano.set('layer[tower_text].html',   current_tower);
        
         current_floor = floor_id;
         
@@ -716,6 +717,7 @@ function krpanoplugin() {
         }
 
         html = a.join("");
+        
         krpano.call('layer[overlay].show_tower_menu(' + html + ')');
     }
 
