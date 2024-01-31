@@ -144,7 +144,7 @@ window.addEventListener('orientationchange', ochange);
 // console.log(tenant);
 embedpano({
    
-    xml: (tenant) ? tenant + ".xml" : "default.xml",
+    xml: (tenant) ? tenant + ".xml" : "all.xml",
     initvars: {
         maps:'./maps/',
         skin: 'ak',
